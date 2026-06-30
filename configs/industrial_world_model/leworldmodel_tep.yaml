@@ -1,0 +1,10 @@
+seed: 42
+project: industrial_world_model
+task: leworldmodel
+dataset:
+  name: tennessee_eastman
+  root: data/raw/sensor/tennessee_eastman
+model:
+  latent_dim: 32
+  action_dim: 8
+output_dir: outputs/industrial_world_model/leworldmodel_tep

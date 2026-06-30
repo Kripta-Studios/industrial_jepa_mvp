@@ -1,0 +1,269 @@
+\documentclass[10pt,conference]{IEEEtran}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage{cite}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{microtype}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{Toward Hierarchical Industrial World Models for Predictive Quality and Anomaly Detection}
+\author{\IEEEauthorblockN{EVOCON Solutions Research Group}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We describe a pilot-ready research MVP for industrial predictive quality, machine failure risk scoring and visual anomaly detection. The system combines pretrained dense visual features from DINOv2 and ResNet, PatchCore-lite and PaDiM-lite heatmap scoring, engineered sensor/process features, a DenseSensorJEPA encoder with SIGReg, scheduled span masking and latent re-masking, and a token-level predictive model for future latent sequences. The dense sensor encoder trains stably without a detected collapse condition. In the current diagnostic, metadata-only scoring reaches an AUPRC of 0.6609, metadata plus EWMA surprise reaches 0.6766, and the best no-action token-world-model surprise combination reaches 0.6960, a gain of 0.0352 over metadata only. This gain has not yet been demonstrated against the stronger metadata/cycle plus engineered-sensor baseline. The deployable MVP therefore retains dense visual anomaly detection and engineered sensor/process features as its practical foundation, while token-level latent surprise remains an optional experimental augmentation pending strict no-cycle and held-out generalization tests.
+\end{abstract}
+
+\section{Introduction}
+Industrial plants generate images, telemetry, process metadata, test logs and maintenance events. These data streams are useful only if they can be converted into timely operational decisions: which part should be inspected, which tool or machine is becoming risky, and which lot or line deserves attention. A practical predictive quality MVP therefore needs more than a neural model. It needs data manifests, leakage controls, baseline comparisons, calibrated scores, local reports and a clear commercial pilot workflow.
+
+The repository \texttt{industrial\_jepa\_mvp} previously explored Sensor-JEPA and Visual-JEPA prototypes. That work showed an important lesson: raw performance can be misleading when metadata or lifecycle proxies dominate. The new \texttt{industrial\_world\_model} line keeps the useful parts of that research but changes the product objective. Instead of selling a single model family, it implements a validation system:
+\begin{enumerate}
+  \item start with strong visual and sensor baselines;
+  \item measure whether self-supervised latent features add incremental value;
+  \item use latent future prediction only when temporal/action data supports it;
+  \item aggregate local anomaly scores into interpretable industrial alert tables.
+\end{enumerate}
+
+\section{Related Work}
+Self-supervised vision transformers have produced transferable dense visual features. DINO~\cite{caron2021dino} and DINOv2~\cite{oquab2023dinov2} motivate frozen dense features as a strong practical starting point. PatchCore~\cite{roth2022patchcore} stores normal patch embeddings and scores anomalies by nearest-neighbor distance. PaDiM~\cite{defard2021padim} models patch-position distributions with Gaussian statistics and Mahalanobis distance. Joint-embedding predictive architectures such as I-JEPA~\cite{assran2023ijepa} motivate latent prediction without reconstructing pixels.
+
+The reviewed JEPA-family papers influence the roadmap in different ways. V-JEPA-style dense supervision motivates visible-token losses, intermediate-layer supervision and dense feature quality diagnostics. LeJEPA/SIGReg motivates collapse-resistant self-supervised training by regularizing representation geometry. JEPA-DNA-style span masking motivates contiguous temporal masks, a masking schedule and latent re-masking to prevent shortcut solutions. Latent world-model work motivates future-token prediction and the use of predictive residuals as local surprise signals. Long-horizon FF-JEPA-style hierarchy is relevant to the industrial aggregation path from local token/window scores to cycle, lot and line scores. Variational JEPA ideas are useful for future uncertainty and human-review routing, but are not required for the current MVP.
+
+In the present MVP, these ideas are used pragmatically: DINOv2/ResNet with PatchCore/PaDiM define the current visual product baseline; engineered sensor features define the current machine-failure baseline; LeJEPA/SIGReg and latent world models are evaluated as incremental modules.
+
+\section{Problem Setup}
+Let $X_t \in \mathbb{R}^{C \times L}$ denote a multichannel industrial sensor window, and let $x_t$ denote a generic industrial observation when the modality is visual. The dense sensor encoder maps a temporal window to a sequence of latent tokens:
+\begin{equation}
+Z_t = E_\theta(X_t) \in \mathbb{R}^{N \times D}.
+\end{equation}
+A token-level predictive model estimates a future latent sequence:
+\begin{equation}
+\hat{Z}_{t+h} = P_\phi(Z_t,c_t,h),
+\end{equation}
+where $c_t$ is optional process context and $h$ is the prediction horizon. The currently available CNC columns are treated as operational context, not as verified causal control actions. A real-action protocol is reserved for temporally aligned setpoints or machine commands.
+
+Local surprise is computed from the predictive residual:
+\begin{equation}
+R_{t,h}=Z_{t+h}-\hat{Z}_{t+h}, \qquad
+S_{t,h}=d(\hat{Z}_{t+h},Z_{t+h}).
+\end{equation}
+The implementation summarizes local surprise with mean, maximum, top-$k$ mean, exponentially weighted moving average (EWMA), slope, 90th percentile and alert persistence. Direct and sign-inverted surprise are both audited because degraded regimes may become more predictable rather than less predictable.
+
+The deployed score hierarchy is:
+\begin{equation}
+\text{patch/token} \rightarrow \text{image/window} \rightarrow \text{cycle} \rightarrow \text{batch} \rightarrow \text{line}.
+\end{equation}
+
+\section{Implementation}
+\subsection{Repository Structure}
+The new line is implemented under \texttt{src/industrial\_world\_model/}, with separate packages for data manifests, visual anomaly detection, LeJEPA, sensor features, world-model prediction and hierarchy. Reproducible scripts are numbered \texttt{40} through \texttt{58} and write outputs under \texttt{outputs/industrial\_world\_model/}. Product artifacts are generated under \texttt{product\_demo/industrial\_world\_model/} and \texttt{presentation/}.
+
+\subsection{Dataset Manifest}
+The manifest script scans available public datasets and records whether each dataset exists, its modality, approximate number of files, categories, masks, temporal structure and suitability for visual anomaly detection or world-model training. The current local manifest includes MVTec AD, VisA, KolektorSDD, CNC milling, CWRU bearing and Paderborn bearing.
+
+\begin{table*}[t]
+\centering
+\caption{Selected local dataset manifest entries. Counts are filesystem-derived and used for readiness checks, not as formal dataset statistics.}
+\label{tab:manifest}
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{@{}l c c r c Y@{}}
+\toprule
+Dataset & Exists & Modality & Files/images & Masks & Use \\
+\midrule
+MVTec AD & yes & visual & 6612 & yes & visual anomaly \\
+VisA & yes & visual & 12021 & yes & visual anomaly \\
+KolektorSDD & yes & visual & 798 & no & visual anomaly \\
+CNC milling & yes & sensor & 969 signal files & no & process/sensor \\
+CWRU bearing & yes & sensor & 111 signal files & no & sensor \\
+Paderborn & yes & sensor & 2560 signal files & no & sensor \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Visual Foundation}
+The visual foundation supports three levels. First, a pixel/stat control computes simple image statistics. Second, pretrained DINOv2 \texttt{dinov2\_vits14} is loaded from the local \texttt{torch.hub} cache and returns normalized patch tokens. Third, pretrained ResNet18/WideResNet features are loaded through \texttt{torchvision} when available and used as classical dense baselines. PatchCore-lite and PaDiM-lite then score anomalies over patch embeddings. If DINOv2 or ResNet weights are not locally available, the code records a fallback backbone rather than silently treating fallback features as equivalent.
+
+PatchCore-lite flattens normal training patch embeddings into a memory bank, optionally subsamples them, and scores each test patch by nearest-neighbor distance. Image score is top-$k$ mean over patch scores. PaDiM-lite estimates mean and covariance for normal embeddings and scores test patches by regularized Mahalanobis distance.
+
+\subsection{LeJEPA/SIGReg}
+The LeJEPA module uses a prediction loss between related views plus a SIGReg-style isotropic regularizer:
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{pred} + \lambda_{sigreg}\mathcal{L}_{sigreg}.
+\end{equation}
+The MVP implementation uses random normalized projections and penalizes projected mean deviation from zero and projected standard deviation deviation from one:
+\begin{equation}
+\mathcal{L}_{sigreg} = \mathbb{E}_j[\mu_j^2] + \mathbb{E}_j[(\sigma_j - 1)^2].
+\end{equation}
+No EMA teacher and no stop-gradient are used by default. Collapse diagnostics record minimum embedding standard deviation, mean standard deviation, pairwise distance, pairwise distance dispersion, effective covariance rank, effective-rank ratio, isotropy score and a collapse flag. These diagnostics are used to reject representations that train numerically but collapse geometrically.
+
+\subsection{Dense Token-Level Sensor Representation}
+DenseSensorJEPA divides each multichannel temporal window into a sequence of temporal tokens. Training uses scheduled contiguous span masking and latent re-masking, so masked positions are replaced again in latent space before prediction and cannot leak target information. SIGReg regularizes the aggregate latent geometry and supplies explicit collapse diagnostics. The dense encoder exposes local token features rather than a single global cycle vector, enabling temporal localization and token-wise surprise analysis.
+
+\subsection{Token-Level Sensor World Model}
+The token-level predictive model maps the current latent sequence, optional context and prediction horizon to a future latent sequence:
+\begin{equation}
+P_\phi(Z_t,c_t,h) \rightarrow \hat{Z}_{t+h}.
+\end{equation}
+We distinguish three protocols:
+\begin{itemize}
+  \item \texttt{no\_action}: uses latent sensor tokens and the horizon only;
+  \item \texttt{context}: additionally uses available CNC process variables;
+  \item \texttt{real\_action}: reserved for verified, time-varying commands or setpoints.
+\end{itemize}
+The present CNC variables are treated as context/process descriptors. The current diagnostic does not support a causal or action-conditioned control claim. The surprise module reports average, maximum, top-$k$, EWMA, slope, 90th-percentile and persistence statistics, and also evaluates sign-inverted surprise.
+
+\subsection{Hierarchy and Product Demo}
+The hierarchy package aggregates local scores using mean, max, top-$k$ mean and EWMA. It outputs group risk tables and top alert rankings. The product demo generator reads real CSV/JSON outputs and creates a local HTML artifact with embedded data plus a JSON file for auditability.
+
+\section{Experiments}
+\subsection{Minimum Viable Run}
+The minimum viable run executed the following sequence: dataset manifest; visual foundation benchmark on MVTec AD bottle with a quick sample limit; DINOv2 and ResNet18 dense-feature PatchCore/PaDiM; sensor evidence consolidation from the previous CNC phase; DenseSensorJEPA pretraining with SIGReg, scheduled span masking and latent re-masking; token-level future prediction under \texttt{no\_action} and \texttt{context}; local-surprise evaluation; hierarchy benchmark; product-demo generation; compilation and tests. Repository validation completed with \texttt{python -m compileall -q src scripts} and \texttt{python -m pytest -q}, with 52 tests passing.
+
+\subsection{Metrics}
+Visual anomaly detection reports image-level AUROC, AUPRC, F1, balanced accuracy, Precision@5\%, Precision@10\%, Recall@5\% and Recall@10\%. Sensor/process evidence reports AUROC, AUPRC, Precision@10, Recall@10, false-alarm metrics and lead-time metrics where available. DenseSensorJEPA reports validation loss, embedding standard deviation and collapse diagnostics. Token-level prediction is summarized with average, maximum, top-$k$, EWMA, slope, 90th-percentile and persistence surprise features.
+
+\section{Results}
+\subsection{Visual Foundation Results}
+Table~\ref{tab:visual} shows the current quick-run result. DINOv2 was actually loaded from local \texttt{torch.hub} cache; this is not a random fallback. The result is deliberately scoped: one category, quick configuration, not a multi-category production validation.
+
+\begin{table}[t]
+\centering
+\caption{Visual foundation quick runs on MVTec AD bottle.}
+\label{tab:visual}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\columnwidth}{@{}Y c c Y@{}}
+\toprule
+Model & AUROC & AUPRC & Notes \\
+\midrule
+Pixel/stat baseline & 0.500 & 0.600 & simple control \\
+DINOv2 + PatchCore-lite & 1.000 & 1.000 & local DINOv2 cache \\
+DINOv2 + PaDiM-lite & 1.000 & 1.000 & local DINOv2 cache \\
+ResNet18 + PatchCore-lite & 0.998 & 0.999 & pretrained torchvision \\
+ResNet18 + PaDiM-lite & 1.000 & 1.000 & pretrained torchvision \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Machine Failure Risk Evidence from Previous Sensor Phase}
+The previous sensor phase remains central for product positioning. In operational CNC evaluation, lifecycle and metadata proxies were strong. In no-cycle and hard-generalization protocols, physical sensor signals became more important. This motivates a product module for machine failure-soon risk scoring: use metadata/cycle and engineered sensor features as the first deployable baseline, then add latent current/future features when they improve the customer-specific validation.
+
+\begin{table}[t]
+\centering
+\caption{Consolidated CNC sensor evidence from the previous phase.}
+\label{tab:sensor}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\columnwidth}{@{}Y c Y@{}}
+\toprule
+Protocol/model & AUPRC & Interpretation \\
+\midrule
+No-cycle metadata only & 0.2386 & weak without lifecycle proxy \\
+No-cycle sensor raw only & 0.5200 & sensors add signal \\
+No-cycle sensor engineered & 0.5583 & strongest simple sensor baseline \\
+No-cycle current latent $z$ & 0.4451 & useful but below engineered \\
+No-cycle predicted future latent & 0.5502 & competitive with engineered \\
+Operational metadata + future latent & 0.7007 & promising but variable \\
+Held-out hardness metadata & 0.5128 & regime shift hurts metadata \\
+Held-out hardness engineered & 0.7631 & physical signal generalizes \\
+Held-out hardness latent combo & 0.7150 & useful but not best \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{JEPA vs Engineered Sensor Features}
+The key technical question for the sensor MVP is not whether JEPA obtains high absolute AUPRC. The question is whether latent features add value over engineered sensor features. Table~\ref{tab:jepaengineered} summarizes the strongest deltas. The result is positive but modest: JEPA/future features are useful as optional features, not as replacements for engineered features.
+
+\begin{table}[t]
+\centering
+\caption{Selected deltas of latent features over engineered sensor features.}
+\label{tab:jepaengineered}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\columnwidth}{@{}Y c c Y@{}}
+\toprule
+Protocol/model & AUPRC & $\Delta$ & Interpretation \\
+\midrule
+No-cycle engineered & 0.5583 & 0.0000 & baseline \\
+No-cycle engineered + current $z$ & 0.5733 & +0.0150 & small positive delta \\
+No-cycle engineered + future $z$ & 0.5670 & +0.0087 & small positive delta \\
+Hardness engineered & 0.6923 & 0.0000 & baseline in JEPA-vs-engineered grid \\
+Hardness engineered + current/future $z$ & 0.7201 & +0.0278 & useful complement \\
+Hardness metadata + engineered + current/future $z$ & 0.7269 & +0.0346 & best selected delta \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Dense Sensor and Token-World-Model Diagnostic}
+Table~\ref{tab:smoke} summarizes the updated dense sensor diagnostic. DenseSensorJEPA converges with non-degenerate embedding variance and no collapse flag. The token-level predictive signal improves metadata-only scoring, but the comparison that matters for deployment---against metadata/cycle plus engineered sensor features---has not yet been completed under the new token-level protocol.
+
+\begin{table}[t]
+\centering
+\caption{Dense sensor and token-world-model diagnostic.}
+\label{tab:smoke}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\columnwidth}{@{}Y c Y@{}}
+\toprule
+Configuration & Value & Interpretation \\
+\midrule
+DenseSensorJEPA val. loss & 0.6410 & stable optimization \\
+Validation embedding std. & 0.6337 & non-degenerate variance \\
+Collapse flag & false & no detected collapse \\
+Metadata only AUPRC & 0.6609 & contextual baseline \\
+Metadata + EWMA surprise & 0.6766 & $+0.0157$ over metadata \\
+Metadata + token-WM no-action avg. & 0.6960 & $+0.0352$ over metadata \\
+Token-WM inverted surprise only & 0.5040 & weak standalone signal \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Commercial Interpretation}
+The strongest product module today is the visual foundation: pretrained DINOv2 or ResNet features plus PatchCore/PaDiM produce anomaly scores and heatmaps. The deployable sensor module remains metadata/cycle plus engineered physical features. DenseSensorJEPA and token-level surprise are technically stable and add a small signal over metadata-only scoring, but remain experimental augmentations until they improve the stronger engineered-feature baseline under matched no-cycle and held-out protocols.
+
+\section{Discussion}
+The MVP is designed to avoid a common failure mode in industrial AI: selling a complex model before establishing whether the customer's data contains usable predictive signal. The visual branch already has a strong baseline path. The sensor branch confirms that physical features matter under proxy controls and material/hardness shifts, while the new token-level model supplies only a modest incremental signal over metadata. Because the best standalone token score uses inverted surprise, failure-proximal regimes may be more regular or predictable than earlier-life regimes. This sign must be selected on development data and verified under strict held-out evaluation. The current limitation is therefore not trivial representation collapse, but insufficient demonstrated information beyond engineered features.
+
+\section{Commercial MVP}
+The commercial offer is a four-to-six week pilot:
+\begin{enumerate}
+  \item ingest images, sensors, logs and maintenance/quality events;
+  \item build visual defect detection with DINOv2/ResNet plus PatchCore/PaDiM;
+  \item build machine failure risk scoring with metadata, cycle, process and engineered sensor features;
+  \item evaluate optional latent current/future features and world-model surprise as incremental signals;
+  \item evaluate heatmaps, risk scores, lead time and top-10\% inspection rankings;
+  \item deliver an executive report, technical report, local HTML/PDF demo and integration roadmap.
+\end{enumerate}
+The intended first customers are industrial companies with cameras, sensor telemetry, test logs or SCADA history. The MVP is particularly suited to surface inspection, PCB or electronic test logs, energy asset telemetry, marine telemetry and process-line quality control.
+
+\section{Limitations}
+This is not a production platform. It has no live plant integration, monitoring, security hardening, drift management, operator workflow or SLA. The visual result is a quick single-category benchmark and must be repeated across categories and customer data. The token-level sensor diagnostic is not yet a strict product comparison: it improves metadata only, but has not been evaluated against the full metadata/cycle plus engineered-feature baseline under matched no-cycle and held-out-hardness protocols. The \texttt{real\_action} protocol remains pending because the available CNC columns are process context rather than verified time-varying commands.
+
+\section{Future Work}
+Immediate next steps are: multi-category visual benchmarking on MVTec AD, VisA and KolektorSDD; heatmap quality review; customer-specific pilot data ingestion; and a decisive token-world-model evaluation under \texttt{no\_cycle} and \texttt{held\_out\_hardness\_bin}. The new token features must be compared directly against \texttt{sensor\_engineered\_only} and \texttt{sensor\_engineered\_plus\_current\_z} with matched seeds, horizons and targets. External sensor validation should then include CWRU, Paderborn and customer-specific industrial sequences.
+
+\section{Conclusion}
+The new \texttt{industrial\_world\_model} line turns the repository into a product-oriented validation MVP. DenseSensorJEPA is stable and avoids detected collapse, and token-level future surprise improves metadata-only AUPRC from 0.6609 to 0.6960. However, this result does not yet displace metadata/cycle plus engineered sensor features. The honest product position is therefore a hybrid pilot: strong visual anomaly baselines and engineered sensor/process scoring as the deployable core, with token-level predictive representations retained as an optional experimental augmentation.
+
+\begin{thebibliography}{99}
+\bibitem{caron2021dino} M. Caron et al., ``Emerging Properties in Self-Supervised Vision Transformers,'' \emph{ICCV}, 2021.
+\bibitem{oquab2023dinov2} M. Oquab et al., ``DINOv2: Learning Robust Visual Features without Supervision,'' \emph{arXiv:2304.07193}, 2023.
+\bibitem{assran2023ijepa} M. Assran et al., ``Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture,'' \emph{CVPR}, 2023.
+\bibitem{roth2022patchcore} K. Roth et al., ``Towards Total Recall in Industrial Anomaly Detection,'' \emph{CVPR}, 2022.
+\bibitem{defard2021padim} T. Defard et al., ``PaDiM: A Patch Distribution Modeling Framework for Anomaly Detection and Localization,'' \emph{ICPR}, 2021.
+\end{thebibliography}
+\end{document}

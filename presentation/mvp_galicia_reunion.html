@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVP de IA Industrial para Calidad Predictiva - Meeting Deck</title>
+  <style>
+    :root {
+      --bg:#f5f7fb; --panel:#ffffff; --ink:#172033; --muted:#64748b; --line:#dbe3ef;
+      --blue:#0b6bcb; --blue2:#e8f2ff; --green:#16804a; --amber:#b76b00;
+      --shadow:0 12px 34px rgba(15,23,42,.08);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5; }
+    @page { size: letter; margin: 0; }
+    a { color:inherit; }
+    header.nav { position:sticky; top:0; z-index:10; background:rgba(255,255,255,.88); backdrop-filter:blur(18px); border-bottom:1px solid var(--line); padding:14px 28px; display:flex; justify-content:space-between; align-items:center; }
+    .brand { font-weight:750; color:var(--ink); }
+    nav { display:flex; gap:18px; font-size:.92rem; color:var(--muted); }
+    .section { max-width:1160px; margin:0 auto; padding:72px 28px; }
+    .hero { min-height:72vh; display:grid; place-items:center; text-align:center; }
+    h1 { font-size:clamp(2.6rem,6vw,5.5rem); line-height:.98; letter-spacing:-.055em; margin:18px 0; }
+    h2 { font-size:clamp(2rem,4vw,3.35rem); line-height:1.05; letter-spacing:-.04em; margin-bottom:14px; }
+    h3 { font-size:1.25rem; margin-bottom:8px; }
+    .lead { color:var(--muted); font-size:1.28rem; max-width:880px; margin:0 auto 22px; }
+    .bodycopy { color:var(--muted); font-size:1.06rem; max-width:820px; margin:0 auto; }
+    .badges { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; }
+    .badge { border:1px solid rgba(11,107,203,.18); background:var(--blue2); color:var(--blue); border-radius:999px; padding:7px 11px; font-size:.78rem; font-weight:750; text-transform:uppercase; letter-spacing:.04em; }
+    .actions { display:flex; gap:12px; justify-content:center; margin-top:28px; flex-wrap:wrap; }
+    .btn { border-radius:999px; padding:12px 20px; text-decoration:none; font-weight:700; border:1px solid var(--line); background:var(--panel); }
+    .btn.primary { background:var(--blue); color:white; border-color:var(--blue); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; width:100%; }
+    .grid.two { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .grid.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:22px; box-shadow:var(--shadow); }
+    .card p, .card li { color:var(--muted); }
+    .metric { font-size:2.25rem; font-weight:850; color:var(--blue); letter-spacing:-.04em; }
+    .metric.small { font-size:1.85rem; }
+    .caption { color:var(--muted); font-size:.92rem; }
+    .model-map { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:20px; }
+    .model-node { background:white; border:1px solid var(--line); border-radius:16px; padding:14px; min-height:118px; box-shadow:var(--shadow); }
+    .model-node strong { color:var(--blue); display:block; margin-bottom:6px; }
+    .value-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; }
+    .kpi { background:linear-gradient(180deg,#fff,#f8fbff); border:1px solid var(--line); border-radius:16px; padding:18px; }
+    .kpi .metric { font-size:2rem; }
+    .pipeline { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-top:24px; }
+    .pipe { background:linear-gradient(180deg,#fff,#f7fbff); border:1px solid rgba(11,107,203,.15); border-radius:17px; padding:18px; min-height:150px; position:relative; }
+    .pipe:not(:last-child)::after { content:"→"; position:absolute; right:-16px; top:48%; color:var(--blue); font-weight:900; font-size:1.5rem; }
+    .pipe .num { width:28px; height:28px; display:grid; place-items:center; border-radius:999px; background:var(--blue); color:white; font-weight:800; margin-bottom:10px; }
+    .bars { display:grid; gap:12px; }
+    .bar-label { display:flex; justify-content:space-between; gap:10px; font-size:.92rem; margin-bottom:5px; }
+    .bar-bg { height:10px; background:#e5edf7; border-radius:999px; overflow:hidden; }
+    .bar-fill { height:100%; background:linear-gradient(90deg,var(--blue),#41a5ff); border-radius:999px; }
+    .table { width:100%; border-collapse:collapse; background:var(--panel); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); }
+    .table th,.table td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; font-size:.95rem; }
+    .table th { background:#eef4fb; }
+    .contacts { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+    .contact { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; }
+    .contact .tag { color:var(--blue); font-size:.78rem; font-weight:800; text-transform:uppercase; }
+    .timeline { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .step { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow:var(--shadow); }
+    .step strong { color:var(--blue); }
+    .split { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    ul.clean { list-style:none; display:grid; gap:10px; }
+    ul.clean li::before { content:"✓"; color:var(--green); font-weight:900; margin-right:8px; }
+    footer { padding:32px; text-align:center; color:var(--muted); border-top:1px solid var(--line); background:white; }
+    @media(max-width:950px) { .model-map{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:850px) { nav{display:none} .grid.two,.grid.three,.split,.pipeline,.timeline,.model-map{grid-template-columns:1fr} .pipe:not(:last-child)::after{content:"↓"; right:50%; top:auto; bottom:-20px} }
+    
+    body { overflow:hidden; height:100vh; }
+    header.nav { position:fixed; width:100%; height:58px; }
+    .deck { height:100vh; position:relative; overflow:hidden; padding-top:58px; }
+    .slide { position:absolute; inset:58px 0 56px; padding:48px 64px; display:flex; flex-direction:column; justify-content:center; opacity:0; pointer-events:none; transform:translateX(40px); transition:.35s ease; background:var(--bg); }
+    .slide.active { opacity:1; pointer-events:auto; transform:none; }
+    .slide-inner { max-width:1120px; margin:0 auto; width:100%; }
+    .controls { position:fixed; bottom:0; left:0; right:0; height:56px; display:flex; justify-content:space-between; align-items:center; padding:0 28px; background:white; border-top:1px solid var(--line); color:var(--muted); }
+    .controls button { width:38px; height:38px; border-radius:999px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+    .dots { display:flex; gap:7px; }
+    .dot { width:8px; height:8px; border-radius:99px; background:#cbd5e1; }
+    .dot.active { background:var(--blue); transform:scale(1.25); }
+    @media print {
+      body { overflow:visible; height:auto; background:white; }
+      header.nav,.controls { display:none; }
+      .deck { height:auto; overflow:visible; padding-top:0; }
+      .slide { position:relative; inset:auto; opacity:1; pointer-events:auto; transform:none; min-height:100vh; page-break-after:always; padding:42px 48px; background:white; }
+      .slide:last-child { page-break-after:auto; }
+      .card,.step,.contact,.table { box-shadow:none; }
+    }
+    
+    </style>
+</head>
+<body>
+  <header class="nav"><div class="brand">Industrial AI MVP</div><div class="caption">Piloto de 4-6 semanas</div></header>
+  <main class="deck"><section class="slide active"><div class="slide-inner"><div class="badges"><span class="badge">Visión + sensores</span><span class="badge">DINOv2 + PatchCore</span><span class="badge">Risk scoring</span><span class="badge">Piloto 4-6 semanas</span></div><h1>MVP de IA Industrial</h1><p class="lead">Calidad predictiva, anomalías visuales y risk scoring para empresas gallegas.</p><p class="bodycopy">Un piloto rápido para transformar datos históricos de planta en rankings de riesgo, heatmaps de defecto y decisiones de inspección accionables.</p></div></section><section class="slide"><div class="slide-inner"><h2>El problema de negocio</h2><p class="lead">Las plantas ya generan datos; el reto es convertirlos en decisiones antes de que aparezca el coste.</p><div class="grid"><div class="card"><h3>Paradas no planificadas</h3><p>Riesgo operativo, retrasos, scrap y mantenimiento reactivo.</p></div><div class="card"><h3>Defectos visuales tardíos</h3><p>Inspección manual costosa y defectos detectados demasiado tarde.</p></div><div class="card"><h3>Señales infrautilizadas</h3><p>SCADA, PLC, test logs, cámaras y GMAO suelen analizarse por separado.</p></div><div class="card"><h3>Demasiadas alarmas</h3><p>Los equipos necesitan priorización, no más ruido.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Qué vendemos como MVP</h2><p class="lead">Un sistema modular para priorizar inspecciones, anticipar riesgo de fallo y convertir datos industriales en decisiones accionables.</p><div class="grid"><div class="card"><h3>Visual Quality Foundation</h3><p>DINOv2 preentrenado, PatchCore-lite, PaDiM-lite, heatmaps y ranking de imágenes/piezas.</p></div><div class="card"><h3>Machine Failure Risk Scoring</h3><p>Sensores físicos, variables de proceso, features engineered, modelos calibrados y alertas top 5-10%.</p></div><div class="card"><h3>Process Intelligence</h3><p>Metadatos, setpoints, recetas, test logs y contexto operativo integrados en un único score.</p></div><div class="card"><h3>Predictive Quality World Model</h3><p>Modelo de evolución esperada del proceso para detectar desviaciones tempranas con secuencias y setpoints.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Tres productos en un mismo piloto</h2><p class="lead">El cliente recibe valor aunque cada línea tenga datos distintos: cámaras, sensores, SCADA, test logs o mantenimiento.</p><div class="grid three"><div class="card"><h3>Visual defect detection</h3><p>Heatmaps sobre pieza/imagen y ranking de inspección para superficie, PCB, envases, producto o vídeo.</p></div>
+<div class="card"><h3>Machine failure risk</h3><p>Predicción de fallo próximo con sensores, ciclo, proceso y lead time operativo para mantenimiento.</p></div>
+<div class="card"><h3>Process deviation alerts</h3><p>Comparación entre evolución esperada y observada para avisar antes de scrap, parada o pérdida de calidad.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Modelos integrados en el MVP</h2><div class="model-map"><div class="model-node"><strong>DINOv2 / ResNet</strong><p>features densas visuales</p></div>
+<div class="model-node"><strong>PatchCore / PaDiM</strong><p>memoria normal + heatmaps</p></div>
+<div class="model-node"><strong>Engineered sensor features</strong><p>RMS, energía, frecuencia, kurtosis</p></div>
+<div class="model-node"><strong>Latent future features</strong><p>señal aprendida opcional</p></div>
+<div class="model-node"><strong>World-model surprise</strong><p>desviación temporal esperada</p></div>
+<div class="model-node"><strong>Hierarchical ranking</strong><p>patch → pieza → ciclo → lote → línea</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Arquitectura del piloto</h2><div class="pipeline"><div class="pipe"><div class="num">1</div><h3>Datos planta</h3><p>Cámaras, sensores, SCADA, test logs, GMAO</p></div><div class="pipe"><div class="num">2</div><h3>Señal útil</h3><p>Visión densa, memoria visual, sensores físicos</p></div><div class="pipe"><div class="num">3</div><h3>Modelos</h3><p>Risk scoring, anomalías y desviación esperada</p></div><div class="pipe"><div class="num">4</div><h3>Alertas</h3><p>Top 10%, heatmaps, pieza/ciclo/lote/línea</p></div><div class="pipe"><div class="num">5</div><h3>Decisión</h3><p>Inspeccionar, ajustar e integrar</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Resultados actuales que sí sirven para vender un piloto</h2><p class="lead">Validación interna con datos públicos industriales: visión muy fuerte para inspección y sensor útil cuando los proxies de ciclo no bastan.</p><div class="grid two"><div class="card bars"><div>
+          <div class="bar-label"><span>Pixel baseline</span><strong>0.60 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:60%"></div></div>
+          <p class="caption">Control visual simple</p>
+        </div>
+<div>
+          <div class="bar-label"><span>DINOv2 + PatchCore</span><strong>1.00 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div>
+          <p class="caption">Quick run MVTec bottle</p>
+        </div>
+<div>
+          <div class="bar-label"><span>ResNet18 + PatchCore</span><strong>0.999 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div>
+          <p class="caption">Quick run MVTec bottle</p>
+        </div>
+<div>
+          <div class="bar-label"><span>Sensor engineered</span><strong>0.558 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:56%"></div></div>
+          <p class="caption">No-cycle CNC</p>
+        </div>
+<div>
+          <div class="bar-label"><span>Señal aprendida futura</span><strong>0.550 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:55%"></div></div>
+          <p class="caption">No-cycle CNC</p>
+        </div>
+<div>
+          <div class="bar-label"><span>Hardness/material sensores</span><strong>0.763 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:76%"></div></div>
+          <p class="caption">Held-out hardness</p>
+        </div>
+<div>
+          <div class="bar-label"><span>Sensores + señal aprendida</span><strong>0.720 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:72%"></div></div>
+          <p class="caption">Held-out hardness</p>
+        </div>
+<div>
+          <div class="bar-label"><span>Delta JEPA sobre engineered</span><strong>+0.035 AUPRC</strong></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:4%"></div></div>
+          <p class="caption">Mejor caso hardness</p>
+        </div></div><div class="card"><h3>Lectura comercial</h3><p>Cuando no basta con contar ciclos o revisar umbrales, las señales físicas y visuales aportan información accionable. El piloto valida si eso ocurre en los datos del cliente.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Módulo específico: fallo próximo en máquina</h2><p class="lead">La parte sensor no se vende como magia: se vende como scoring de riesgo con señales físicas, proceso y alertas priorizadas.</p><div class="value-grid"><div class="kpi"><div class="metric small">0.701</div><h3>Operational metadata + future signal</h3><p>AUPRC, h=3/K=10</p></div>
+<div class="kpi"><div class="metric small">0.558</div><h3>No-cycle sensor engineered</h3><p>AUPRC sin proxies de ciclo</p></div>
+<div class="kpi"><div class="metric small">0.550</div><h3>No-cycle predicted future</h3><p>AUPRC señal latente futura</p></div>
+<div class="kpi"><div class="metric small">0.763</div><h3>Held-out hardness sensor engineered</h3><p>AUPRC cambio material/dureza</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Producto y servicios ofrecidos</h2><div class="grid"><div class="card"><h3>Piloto visual</h3><p>Calidad de superficie, PCB, envases, producto y vídeo industrial con heatmaps.</p></div><div class="card"><h3>Piloto fallo máquina</h3><p>Risk scoring con vibración, corrientes, telemetría, SCADA, ciclo, proceso y lead time.</p></div><div class="card"><h3>Auditoría de datos</h3><p>Qué señal sirve, qué variables son redundantes y qué se puede automatizar.</p></div><div class="card"><h3>Demo ejecutiva</h3><p>HTML/PDF, tablas, rankings de inspección y roadmap de integración.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Cuentas prioritarias en Galicia</h2><p class="lead">Contactos públicos para outreach. No implica relación, interés ni partnership.</p><div class="contacts">
+        <div class="contact">
+          <div class="tag">1 · Email</div>
+          <h3>FINSA</h3>
+          <p><strong>Madera / tableros</strong></p>
+          <p>Calidad de superficie, sensores de proceso y mantenimiento predictivo en líneas industriales.</p>
+          <p class="caption">finsa@finsa.es · +34 981 050 000</p>
+        </div>
+
+        <div class="contact">
+          <div class="tag">2 · Email</div>
+          <h3>Televés</h3>
+          <p><strong>Electrónica</strong></p>
+          <p>Test logs, inspección visual de PCB, anomalía en producción y control de calidad.</p>
+          <p class="caption">televes@televes.com · 981 52 22 00</p>
+        </div>
+
+        <div class="contact">
+          <div class="tag">3 · Email</div>
+          <h3>Norvento</h3>
+          <p><strong>Energía</strong></p>
+          <p>SCADA, vibración, alertas tempranas y mantenimiento predictivo en activos energéticos.</p>
+          <p class="caption">norvento@norvento.com · +34 982 227889</p>
+        </div>
+
+        <div class="contact">
+          <div class="tag">4 · Email</div>
+          <h3>Marine Instruments</h3>
+          <p><strong>Telemetría marina</strong></p>
+          <p>Telemetría marina, sensores y anomalías tempranas en flotas de equipos.</p>
+          <p class="caption">marineinstruments@marineinstruments.es · 986366360</p>
+        </div>
+
+        <div class="contact">
+          <div class="tag">5 · Email</div>
+          <h3>Alén Space</h3>
+          <p><strong>Aeroespacial</strong></p>
+          <p>Telemetría satelital, alertas por sensores y ranking de riesgo operacional.</p>
+          <p class="caption">info@alen.space</p>
+        </div>
+
+        <div class="contact">
+          <div class="tag">6 · Formulario / llamada</div>
+          <h3>Cinfo</h3>
+          <p><strong>Vídeo / visión</strong></p>
+          <p>Vídeo, anomalía visual, eventos y pilotos de visión industrial.</p>
+          <p class="caption">Formulario web · +34 881 896 975</p>
+        </div></div></div></section><section class="slide"><div class="slide-inner"><h2>Piloto de 4-6 semanas</h2><div class="timeline"><div class="step"><strong>1. Ingesta</strong><p>Datos históricos, imágenes, sensores, logs y eventos de calidad/fallo.</p></div><div class="step"><strong>2. Baselines</strong><p>Reglas simples, modelos clásicos y baseline visual fuerte.</p></div><div class="step"><strong>3. Modelado</strong><p>Risk scoring, anomaly detection, heatmaps y ranking top 10%.</p></div><div class="step"><strong>4. Decisión</strong><p>Informe de inversión, demo local y plan de integración.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Entregables del piloto</h2><div class="split"><div class="card"><ul class="clean"><li>Benchmark con métricas reales por categoría o activo.</li><li>Heatmaps visuales y ranking top de inspecciones.</li><li>Score de riesgo por pieza, ciclo, lote o línea cuando existan datos.</li><li>Informe ejecutivo y técnico con recomendaciones.</li><li>Demo HTML local y PDF para dirección.</li></ul></div><div class="card"><h3>Alcance claro para vender con confianza</h3><p>Próximo paso: llamada técnica de 15 minutos y selección de una línea/caso piloto.</p></div></div></div></section><section class="slide"><div class="slide-inner"><h2>Alcance claro para vender con confianza</h2><div class="split"><div class="card"><h3>Lo que sí entregamos</h3><ul class="clean"><li>Validación con datos reales del cliente.</li><li>Comparación contra baselines simples y fuertes.</li><li>Métricas útiles: AUPRC, Precision@10, falsas alarmas y lead time.</li><li>Producto modular: visión, sensores, proceso y alertas.</li></ul></div><div class="card"><h3>Condiciones para desplegar</h3><ul class="clean"><li>Datos etiquetados o eventos históricos suficientes.</li><li>Revisión con expertos de planta.</li><li>Piloto antes de integración operativa.</li><li>Monitorización y mantenimiento si pasa a producción.</li></ul></div></div></div></section></main>
+  <div class="controls"><span id="count">1 / 13</span><div class="dots" id="dots"></div><div><button id="prev">←</button><button id="next">→</button></div></div>
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    const dots = document.getElementById('dots');
+    const count = document.getElementById('count');
+    let idx = 0;
+    slides.forEach((_, i) => {
+      const d = document.createElement('span'); d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => go(i); dots.appendChild(d);
+    });
+    function go(i) {
+      idx = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach((s, n) => s.classList.toggle('active', n === idx));
+      [...document.querySelectorAll('.dot')].forEach((d, n) => d.classList.toggle('active', n === idx));
+      count.textContent = (idx + 1) + ' / ' + slides.length;
+    }
+    document.getElementById('next').onclick = () => go(idx + 1);
+    document.getElementById('prev').onclick = () => go(idx - 1);
+    document.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === ' ') go(idx + 1); if (e.key === 'ArrowLeft') go(idx - 1); });
+  </script>
+</body>
+</html>

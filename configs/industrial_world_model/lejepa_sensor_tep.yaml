@@ -1,0 +1,9 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_sensor
+dataset:
+  name: tennessee_eastman
+  root: data/raw/sensor/tennessee_eastman
+loss:
+  lambda_sigreg: 0.05
+output_dir: outputs/industrial_world_model/sensor_lejepa_tep

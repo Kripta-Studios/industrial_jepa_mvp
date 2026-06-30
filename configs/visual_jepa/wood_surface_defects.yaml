@@ -1,0 +1,5 @@
+data:
+  dataset: wood_surface_defects
+  raw_root: data/raw/visual/wood_surface_defects
+  status: pending
+

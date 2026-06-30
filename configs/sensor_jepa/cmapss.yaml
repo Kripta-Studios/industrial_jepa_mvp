@@ -1,0 +1,5 @@
+data:
+  dataset: cmapss
+  raw_root: data/raw/sensor/cmapss
+  status: pending
+

@@ -1,0 +1,27 @@
+extends: configs/visual_jepa/dense_mvtec_all.yaml
+
+dataset:
+  datasets:
+    - name: mvtec_ad
+      root: data/raw/visual/mvtec_ad
+      categories: all
+      train_split: train
+      normal_only: true
+      enabled: true
+    - name: visa
+      root: data/raw/visual/visa
+      categories: all
+      train_split: train
+      normal_only: true
+      enabled: true
+    - name: kolektor_sdd
+      root: data/raw/visual/kolektor_sdd
+      normal_only: true
+      enabled: true
+  image_size: 224
+  channels: 3
+  val_ratio: 0.15
+
+eval:
+  output_dir: outputs/visual_jepa/dense_pretrain_mvtec_visa_kolektor
+

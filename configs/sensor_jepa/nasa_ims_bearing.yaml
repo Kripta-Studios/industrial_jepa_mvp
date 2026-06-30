@@ -1,0 +1,5 @@
+data:
+  dataset: nasa_ims_bearing
+  raw_root: data/raw/sensor/nasa_ims_bearing
+  status: pending
+

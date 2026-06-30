@@ -1,0 +1,9 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_sensor
+dataset:
+  name: nasa_cmapss
+  root: data/raw/sensor/cmapss
+loss:
+  lambda_sigreg: 0.05
+output_dir: outputs/industrial_world_model/sensor_lejepa_cmapss

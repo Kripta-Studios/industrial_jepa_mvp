@@ -1,0 +1,32 @@
+extends: configs/visual_jepa/dense_mvtec_all.yaml
+
+dataset:
+  datasets:
+    - name: mvtec_ad
+      root: data/raw/visual/mvtec_ad
+      categories: [bottle, cable, capsule, metal_nut, screw, tile, wood, transistor, zipper]
+      train_split: train
+      normal_only: true
+      enabled: true
+    - name: visa
+      root: data/raw/visual/visa
+      categories: [pcb1, pcb2, pcb3, pcb4, capsules]
+      train_split: train
+      normal_only: true
+      enabled: false
+    - name: kolektor_sdd
+      root: data/raw/visual/kolektor_sdd
+      normal_only: true
+      enabled: false
+  image_size: 224
+  channels: 3
+  val_ratio: 0.15
+
+benchmark:
+  output_dir: outputs/visual_jepa/dense_benchmark
+  latent_repeats: 2
+  image_threshold_quantile: 0.99
+  pixel_threshold_quantile: 0.995
+  memory_backbones: [dense_visual_jepa, resnet18, wide_resnet50, dinov2]
+  padim_backbones: [dense_visual_jepa, resnet18, wide_resnet50, dinov2]
+

@@ -1,0 +1,5 @@
+data:
+  dataset: paderborn_bearing
+  raw_root: data/raw/sensor/paderborn_bearing
+  status: partial
+

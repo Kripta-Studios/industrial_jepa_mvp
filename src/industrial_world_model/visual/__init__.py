@@ -1,0 +1,1 @@
+"""Visual anomaly foundation components."""

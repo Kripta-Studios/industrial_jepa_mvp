@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light" />
+<title>EVOCON Industrial Predictive Quality - Algorithm Demo</title>
+<style>
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface-soft:#fbfbfd;
+  --surface-blue:#f2f7ff;
+  --ink:#1d1d1f;
+  --ink-soft:#3a3a3c;
+  --muted:#6e6e73;
+  --line:rgba(29,29,31,.10);
+  --blue:#0071e3;
+  --blue-dark:#0057b8;
+  --green:#248a3d;
+  --green-soft:#eaf8ee;
+  --amber:#c66a00;
+  --amber-soft:#fff7e8;
+  --red:#d70015;
+  --red-soft:#fff0f1;
+  --shadow:0 16px 50px rgba(0,0,0,.07);
+  --shadow-soft:0 8px 28px rgba(0,0,0,.055);
+  --radius-xl:30px;
+  --radius-lg:22px;
+  --radius-md:16px;
+  --cycle:24s;
+  --demo-scale:1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 4%,rgba(0,113,227,.07),transparent 28%),
+    radial-gradient(circle at 86% 88%,rgba(52,199,89,.055),transparent 30%),
+    var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:block;
+}
+.viewport{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+}
+.stage-shell{
+  width:1920px;
+  height:1080px;
+  position:relative;
+  flex:0 0 auto;
+}
+.stage{
+  position:absolute;
+  left:0;
+  top:0;
+  width:1920px;
+  height:1080px;
+  padding:32px;
+  transform:scale(var(--demo-scale));
+  transform-origin:top left;
+}
+.app{
+  width:100%;
+  height:100%;
+  border:1px solid var(--line);
+  border-radius:34px;
+  background:rgba(255,255,255,.90);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:72px 1fr;
+}
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.80);
+  backdrop-filter:saturate(180%) blur(22px);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:38px;height:38px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  color:white;
+  background:linear-gradient(145deg,#2f80ed,#0057b8);
+  font-size:.76rem;
+  font-weight:800;
+  box-shadow:0 5px 16px rgba(0,113,227,.20);
+}
+.brand strong{font-size:1.04rem;letter-spacing:-.02em}
+.brand span{display:block;color:var(--muted);font-size:.80rem;margin-top:2px}
+.top-center{font-size:.84rem;color:var(--ink-soft);font-weight:560;text-align:center}
+.top-pills{display:flex;gap:10px;align-items:center}
+.pill{
+  height:34px;
+  padding:0 14px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border-radius:999px;
+  border:1px solid rgba(0,113,227,.16);
+  background:rgba(0,113,227,.055);
+  color:var(--blue-dark);
+  font-size:.78rem;
+  font-weight:620;
+}
+.pill.green{border-color:rgba(36,138,61,.20);background:rgba(36,138,61,.08);color:var(--green)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.zoom-controls{
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  z-index:50;
+  display:flex;
+  gap:7px;
+  padding:7px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.86);
+  box-shadow:0 10px 30px rgba(0,0,0,.10);
+  backdrop-filter:saturate(180%) blur(18px);
+}
+.zoom-controls button{
+  appearance:none;
+  border:1px solid rgba(0,113,227,.14);
+  background:#f2f7ff;
+  color:var(--blue-dark);
+  height:32px;
+  min-width:50px;
+  border-radius:999px;
+  font:700 .76rem/1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  cursor:pointer;
+}
+.zoom-controls button.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+.main{
+  height:100%;
+  min-height:0;
+  padding:24px 32px 24px;
+  display:grid;
+  grid-template-columns:1.08fr .84fr .88fr;
+  grid-template-rows:minmax(0,1fr) 178px;
+  gap:20px;
+}
+.card{
+  position:relative;
+  min-height:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.card::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,#0071e3,#55aaff);
+  opacity:.74;
+}
+.card.green::before{background:#34c759}
+.card.amber::before{background:#ff9f0a}
+.card.red::before{background:#ff453a}
+.card-header{padding:22px 24px 12px}
+.kicker{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  color:var(--blue);
+  font-size:.68rem;
+  font-weight:760;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.kicker::before{content:"";width:22px;height:1px;background:var(--blue)}
+h1,h2,h3{letter-spacing:-.035em}
+h2{font-size:1.72rem;line-height:1.05;font-weight:700}
+h3{font-size:1rem;line-height:1.2;font-weight:650}
+p{color:var(--muted);font-size:.84rem;line-height:1.38}
+.visual-card{grid-row:1}
+.visual-wrap{
+  min-height:0;
+  height:calc(100% - 95px);
+  padding:0 24px 22px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.part-panel{
+  position:relative;
+  min-height:0;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:linear-gradient(160deg,#ffffff,#f8f9fb);
+  overflow:hidden;
+}
+.part-title{
+  position:absolute;
+  left:18px;top:15px;
+  font-weight:650;
+  font-size:.86rem;
+  z-index:3;
+}
+.part-stage{
+  position:absolute;
+  left:18px;right:18px;top:56px;bottom:54px;
+  border:1px solid rgba(0,113,227,.08);
+  border-radius:18px;
+  background:#f4f7fb;
+  display:grid;
+  place-items:center;
+}
+.part-svg{width:76%;max-width:280px;overflow:visible}
+.heatmap{
+  opacity:.20;
+  transform-origin:center;
+  animation:heatmap var(--cycle) infinite;
+}
+.heatmap-base{
+  opacity:.08;
+  transform-origin:center;
+  animation:heatBase var(--cycle) infinite;
+}
+.defect-outline{
+  opacity:0;
+  stroke-dasharray:7 6;
+  animation:outline var(--cycle) infinite;
+}
+.scan-line{
+  opacity:0;
+  transform-origin:center;
+  animation:scan var(--cycle) infinite;
+}
+.heat-scan{
+  opacity:0;
+  animation:heatScan var(--cycle) infinite;
+}
+.scan-glow{
+  opacity:0;
+  animation:scanGlow var(--cycle) infinite;
+}
+.part-caption{
+  position:absolute;
+  left:18px;right:150px;bottom:19px;
+  color:var(--muted);
+  font-size:.78rem;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.status-strip{
+  position:absolute;
+  right:18px;
+  bottom:16px;
+  height:30px;
+  min-width:112px;
+  padding:0 13px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.74rem;
+  font-weight:700;
+  animation:statusColor var(--cycle) infinite;
+}
+.status-strip.input{
+  animation:none;
+  background:#eef5ff;
+  color:var(--blue-dark);
+  border:1px solid rgba(0,113,227,.16);
+}
+.algorithm-card{grid-row:1}
+.steps{
+  padding:0 22px 22px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.step{
+  position:relative;
+  min-height:44px;
+  display:grid;
+  grid-template-columns:34px 1fr 54px;
+  gap:9px;
+  align-items:center;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface-soft);
+  opacity:.52;
+  transform:translateX(0);
+}
+.step-num{
+  width:32px;height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  color:#fff;
+  background:linear-gradient(145deg,#2f80ed,#0057b8);
+  font-weight:800;
+  font-size:.86rem;
+}
+.step strong{font-size:.90rem;display:block;margin-bottom:3px}
+.step span{display:none}
+.mini-icon{
+  height:30px;width:48px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:rgba(0,113,227,.065);
+  color:var(--blue);
+  font-weight:800;
+}
+.cloud-panel{
+  height:190px;
+  margin:0 22px 11px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 28% 32%,rgba(0,113,227,.08),transparent 34%),
+    linear-gradient(160deg,#ffffff,#f8f9fb);
+  overflow:hidden;
+  position:relative;
+}
+.cloud-panel h3{
+  position:absolute;
+  left:17px;
+  top:13px;
+  z-index:2;
+}
+.cloud-panel p{
+  position:absolute;
+  left:17px;
+  top:42px;
+  z-index:2;
+  font-size:.73rem;
+}
+.cloud-svg{
+  position:absolute;
+  inset:50px 12px 8px;
+  width:calc(100% - 24px);
+  height:calc(100% - 58px);
+}
+.cloud-grid{stroke:rgba(29,29,31,.08);stroke-width:1}
+.cluster-ring{
+  fill:rgba(0,113,227,.06);
+  stroke:rgba(0,113,227,.20);
+  stroke-width:2;
+  stroke-dasharray:7 7;
+}
+.point{
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:pointDrift var(--cycle) infinite;
+}
+.point.normal{fill:#0071e3}
+.point.safe{fill:#248a3d}
+.point.warn{fill:#ff9f0a;animation:pointWarn var(--cycle) infinite}
+.point.bad{fill:#d70015;animation:pointBad var(--cycle) infinite}
+.decision-arrow{
+  stroke:#c66a00;
+  stroke-width:3;
+  fill:none;
+  stroke-dasharray:220;
+  stroke-dashoffset:220;
+  animation:drawDecision var(--cycle) infinite;
+}
+.step:nth-child(1){animation:activeStep var(--cycle) infinite}
+.step:nth-child(2){animation:activeStep2 var(--cycle) infinite}
+.step:nth-child(3){animation:activeStep3 var(--cycle) infinite}
+.step:nth-child(4){animation:activeStep4 var(--cycle) infinite}
+.step:nth-child(5){animation:activeStep5 var(--cycle) infinite}
+.risk-card{
+  grid-row:1;
+  animation:riskCardGlow var(--cycle) infinite;
+}
+.risk-body{
+  min-height:0;
+  padding:0 24px 22px;
+  display:grid;
+  grid-template-rows:auto auto 1fr;
+  gap:16px;
+}
+.risk-meter{
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:linear-gradient(160deg,#ffffff,#f8f9fb);
+}
+.risk-meter-grid{
+  display:grid;
+  grid-template-columns:1fr 84px;
+  gap:18px;
+  align-items:center;
+}
+.risk-value{
+  font-size:4.1rem;
+  line-height:.9;
+  font-weight:720;
+  letter-spacing:-.07em;
+  color:#248a3d;
+  transition:color .35s ease;
+}
+.risk-label{font-size:.80rem;color:var(--muted);margin-top:8px}
+.risk-track{
+  height:13px;
+  border-radius:999px;
+  background:#e8e8ed;
+  overflow:hidden;
+  margin-top:18px;
+}
+.risk-track i{
+  display:block;
+  height:100%;
+  width:20%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#34c759,#ff9f0a,#ff453a);
+  animation:riskbar var(--cycle) infinite;
+}
+.state-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  margin-top:15px;
+}
+.state-pill{
+  height:36px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  font-size:.78rem;
+  font-weight:760;
+  border:1px solid var(--line);
+  background:#fbfbfd;
+  color:var(--muted);
+}
+.state-pill.normal{animation:normalPill var(--cycle) infinite}
+.state-pill.watch{animation:watchPill var(--cycle) infinite}
+.state-pill.review{animation:reviewPill var(--cycle) infinite}
+.risk-tower{
+  height:150px;
+  border-radius:20px;
+  background:#f2f2f7;
+  border:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+}
+.risk-tower::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:26%;
+  background:linear-gradient(to top,#34c759,#ff9f0a,#ff453a);
+  transform-origin:bottom;
+  animation:riskTower var(--cycle) infinite;
+}
+.risk-tower span{
+  position:absolute;
+  left:0;right:0;top:12px;
+  text-align:center;
+  font-size:.68rem;
+  font-weight:760;
+  color:var(--muted);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.recommendation{
+  border:1px solid rgba(198,106,0,.16);
+  background:#fff8ee;
+  color:#70450b;
+  border-radius:18px;
+  padding:17px 18px;
+}
+.recommendation h3{color:#70450b;margin-bottom:7px}
+.recommendation p{color:#70450b}
+.improvement{
+  border:1px solid rgba(36,138,61,.16);
+  background:#f7fcf8;
+  color:#14532d;
+  border-radius:18px;
+  padding:17px 18px;
+}
+.improvement h3{color:#14532d;margin-bottom:7px}
+.improvement p{color:#14532d}
+.timeline-card{
+  grid-column:1 / 4;
+  grid-row:2;
+  display:grid;
+  grid-template-columns:1.05fr 1.1fr .85fr;
+  gap:16px;
+  padding:14px 18px;
+}
+.mini-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(255,255,255,.74);
+  padding:12px 14px;
+}
+.mini-card h3{margin-bottom:6px}
+.mini-card p{font-size:.76rem;line-height:1.24}
+.machine-line{
+  height:46px;
+  display:grid;
+  grid-template-columns:62px 1fr 52px;
+  align-items:center;
+  gap:14px;
+}
+.machine{
+  height:38px;
+  border-radius:14px;
+  background:linear-gradient(145deg,#eef5ff,#f8fbff);
+  border:1px solid rgba(0,113,227,.10);
+  display:grid;
+  place-items:center;
+  color:var(--blue-dark);
+  font-weight:800;
+}
+.riskbar{
+  height:12px;
+  border-radius:999px;
+  background:#e8e8ed;
+  overflow:hidden;
+}
+.riskbar i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#34c759,#ff9f0a,#ff453a);
+  animation:riskbar var(--cycle) infinite;
+}
+.operator-list{display:grid;gap:7px;margin-top:1px}
+.operator-row{
+  display:grid;
+  grid-template-columns:22px 1fr;
+  gap:9px;
+  align-items:start;
+  color:var(--ink-soft);
+  font-size:.76rem;
+  line-height:1.18;
+}
+.check{
+  width:20px;height:20px;
+  border-radius:7px;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:var(--green);
+  font-size:.78rem;
+  font-weight:800;
+}
+.note{
+  position:absolute;
+  right:34px;
+  top:12px;
+  color:#8e8e93;
+  font-size:.72rem;
+}
+.replay-hint{
+  position:absolute;
+  left:34px;
+  top:12px;
+  color:var(--muted);
+  font-size:.74rem;
+}
+.flow-svg{width:100%;height:66px;margin-top:0}
+.flow-dot{animation:flowDot var(--cycle) infinite}
+.sensor-path-1{stroke-dasharray:500;stroke-dashoffset:500;animation:drawLine1 var(--cycle) infinite}
+.sensor-path-2{stroke-dasharray:500;stroke-dashoffset:500;animation:drawLine2 var(--cycle) infinite}
+.sensor-alert{opacity:0;animation:alertBand var(--cycle) infinite}
+.pulse{animation:pulse var(--cycle) infinite}
+
+@keyframes heatmap{
+  0%,26%{opacity:.18;transform:scale(.82)}
+  32%,72%{opacity:1;transform:scale(1)}
+  82%,100%{opacity:.35;transform:scale(.92)}
+}
+@keyframes heatBase{
+  0%,22%{opacity:.05;transform:scale(.75)}
+  34%,78%{opacity:.36;transform:scale(1)}
+  88%,100%{opacity:.14;transform:scale(.86)}
+}
+@keyframes outline{
+  0%,32%{opacity:0}
+  37%,70%{opacity:1}
+  82%,100%{opacity:.25}
+}
+@keyframes scan{
+  0%,8%{opacity:0;transform:translateX(-38%)}
+  13%,30%{opacity:1;transform:translateX(38%)}
+  32%,100%{opacity:0;transform:translateX(38%)}
+}
+@keyframes heatScan{
+  0%,12%{opacity:0;transform:translateX(-150px)}
+  18%,42%{opacity:1;transform:translateX(150px)}
+  46%,100%{opacity:0;transform:translateX(150px)}
+}
+@keyframes scanGlow{
+  0%,18%{opacity:0}
+  24%,48%{opacity:.55}
+  58%,100%{opacity:0}
+}
+@keyframes activeStep{
+  0%,17%{opacity:1;transform:scale(1.015);background:#f2f7ff}
+  22%,100%{opacity:.52;transform:scale(1);background:var(--surface-soft)}
+}
+@keyframes activeStep2{
+  0%,17%{opacity:.52}
+  20%,34%{opacity:1;transform:scale(1.015);background:#f2f7ff}
+  39%,100%{opacity:.52;transform:scale(1);background:var(--surface-soft)}
+}
+@keyframes activeStep3{
+  0%,34%{opacity:.52}
+  37%,51%{opacity:1;transform:scale(1.015);background:#fff8ee}
+  56%,100%{opacity:.52;transform:scale(1);background:var(--surface-soft)}
+}
+@keyframes activeStep4{
+  0%,51%{opacity:.52}
+  54%,68%{opacity:1;transform:scale(1.015);background:#fff8ee}
+  73%,100%{opacity:.52;transform:scale(1);background:var(--surface-soft)}
+}
+@keyframes activeStep5{
+  0%,68%{opacity:.52}
+  71%,92%{opacity:1;transform:scale(1.015);background:#f7fcf8}
+  97%,100%{opacity:.52;transform:scale(1);background:var(--surface-soft)}
+}
+@keyframes riskCardGlow{
+  0%,25%,86%,100%{border-color:rgba(36,138,61,.16);box-shadow:var(--shadow-soft)}
+  38%,58%{border-color:rgba(198,106,0,.24);box-shadow:0 12px 36px rgba(198,106,0,.11)}
+  65%,78%{border-color:rgba(215,0,21,.22);box-shadow:0 12px 36px rgba(215,0,21,.10)}
+}
+@keyframes normalPill{
+  0%,25%,84%,100%{background:#eaf8ee;color:#248a3d;border-color:rgba(36,138,61,.26);box-shadow:0 0 0 4px rgba(36,138,61,.08)}
+  34%,78%{background:#fbfbfd;color:#8e8e93;border-color:var(--line);box-shadow:none}
+}
+@keyframes watchPill{
+  0%,33%,62%,100%{background:#fbfbfd;color:#8e8e93;border-color:var(--line);box-shadow:none}
+  38%,57%{background:#fff8ee;color:#c66a00;border-color:rgba(198,106,0,.24);box-shadow:0 0 0 4px rgba(198,106,0,.08)}
+}
+@keyframes reviewPill{
+  0%,60%,82%,100%{background:#fbfbfd;color:#8e8e93;border-color:var(--line);box-shadow:none}
+  65%,77%{background:#fff0f1;color:#d70015;border-color:rgba(215,0,21,.24);box-shadow:0 0 0 4px rgba(215,0,21,.08)}
+}
+@keyframes statusColor{
+  0%,25%{background:#eaf8ee;color:#248a3d;border:1px solid rgba(36,138,61,.20)}
+  36%,58%{background:#fff8ee;color:#c66a00;border:1px solid rgba(198,106,0,.18)}
+  64%,76%{background:#fff0f1;color:#d70015;border:1px solid rgba(215,0,21,.18)}
+  84%,100%{background:#eaf8ee;color:#248a3d;border:1px solid rgba(36,138,61,.20)}
+}
+@keyframes riskbar{
+  0%,24%{width:24%}
+  38%,56%{width:64%}
+  64%,76%{width:91%}
+  86%,100%{width:32%}
+}
+@keyframes riskTower{
+  0%,24%{height:24%}
+  38%,56%{height:64%}
+  64%,76%{height:91%}
+  86%,100%{height:32%}
+}
+@keyframes pointDrift{
+  0%,24%{transform:translate(0,0);opacity:.72}
+  42%,68%{transform:translate(3px,-5px);opacity:.90}
+  86%,100%{transform:translate(0,0);opacity:.72}
+}
+@keyframes pointWarn{
+  0%,30%{opacity:0;transform:translate(-82px,30px) scale(.55)}
+  42%,60%{opacity:1;transform:translate(0,0) scale(1.15)}
+  86%,100%{opacity:.30;transform:translate(-24px,10px) scale(.80)}
+}
+@keyframes pointBad{
+  0%,50%{opacity:0;transform:translate(-126px,44px) scale(.45)}
+  62%,78%{opacity:1;transform:translate(0,0) scale(1.32)}
+  88%,100%{opacity:.24;transform:translate(-42px,14px) scale(.72)}
+}
+@keyframes drawDecision{
+  0%,45%{stroke-dashoffset:220;opacity:0}
+  58%,80%{stroke-dashoffset:0;opacity:1}
+  90%,100%{stroke-dashoffset:0;opacity:.25}
+}
+@keyframes flowDot{
+  0%{transform:translateX(0);opacity:0}
+  7%{opacity:1}
+  92%{transform:translateX(610px);opacity:1}
+  100%{transform:translateX(610px);opacity:0}
+}
+@keyframes drawLine1{
+  0%,10%{stroke-dashoffset:500}
+  26%,100%{stroke-dashoffset:0}
+}
+@keyframes drawLine2{
+  0%,30%{stroke-dashoffset:500}
+  48%,100%{stroke-dashoffset:0}
+}
+@keyframes alertBand{
+  0%,40%{opacity:0}
+  47%,80%{opacity:1}
+  88%,100%{opacity:.28}
+}
+@keyframes pulse{
+  0%,42%{opacity:0;transform:scale(.7)}
+  50%,78%{opacity:1;transform:scale(1)}
+  92%,100%{opacity:0;transform:scale(1.35)}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition:none!important}
+}
+@media (max-height: 1px){
+  .stage{width:min(calc(100vw - 40px), calc((100dvh - 88px) * 16 / 9));padding:1.1%}
+  .app{grid-template-rows:62px 1fr;border-radius:28px}
+  .topbar{padding:0 22px}
+  .main{padding:16px 22px 18px;gap:14px;grid-template-rows:minmax(0,1fr) 122px}
+  .card-header{padding:16px 18px 8px}
+  h2{font-size:1.42rem}
+  p{font-size:.76rem}
+  .visual-wrap{height:calc(100% - 75px);padding:0 18px 16px;gap:12px}
+  .part-title{top:12px;left:14px}
+  .part-stage{left:14px;right:14px;top:44px;bottom:36px}
+  .part-caption{display:none}
+  .status-strip{display:none}
+  .cloud-panel{height:150px;margin:0 18px 8px}
+  .cloud-panel{height:108px}
+  .cloud-panel h3{top:10px}
+  .cloud-panel p{display:none}
+  .cloud-svg{inset:34px 10px 8px;width:calc(100% - 20px);height:calc(100% - 42px)}
+  .steps{padding:0 18px 12px;gap:5px}
+  .step{min-height:34px;grid-template-columns:30px 1fr 46px;gap:8px;padding:4px 8px;border-radius:13px}
+  .step-num{width:24px;height:24px;border-radius:8px;font-size:.76rem}
+  .step strong{font-size:.78rem;margin-bottom:0}
+  .step span{display:none}
+  .mini-icon{height:26px;width:42px;border-radius:10px;font-size:.72rem}
+  .risk-body{padding:0 18px 16px;gap:10px}
+  .risk-meter{padding:14px}
+  .risk-meter-grid{grid-template-columns:1fr 64px;gap:10px}
+  .risk-value{font-size:2.95rem}
+  .risk-label{font-size:.68rem;margin-top:4px}
+  .risk-track{height:10px;margin-top:8px}
+  .state-row{gap:6px;margin-top:8px}
+  .state-pill{height:28px;border-radius:11px;font-size:.66rem}
+  .risk-tower{height:96px;border-radius:16px}
+  .risk-tower span{font-size:.58rem}
+  .recommendation,.improvement{padding:12px 14px}
+  .recommendation p{display:none}
+  .improvement{display:none}
+  .timeline-card{padding:12px 14px;gap:12px}
+  .mini-card{padding:8px 10px}
+  .mini-card p{display:none}
+  .machine-line{height:34px;grid-template-columns:54px 1fr 42px;gap:10px}
+  .machine{height:30px;border-radius:11px}
+  .flow-svg{height:42px}
+  .operator-list{gap:3px}
+  .operator-row{font-size:.66rem;line-height:1.1;grid-template-columns:18px 1fr;gap:7px}
+  .check{width:17px;height:17px;border-radius:6px;font-size:.66rem}
+}
+</style>
+</head>
+<body>
+<div class="viewport">
+<div class="zoom-controls" aria-label="Demo zoom controls">
+  <button type="button" data-scale="1" class="active">100%</button>
+  <button type="button" data-scale=".9">90%</button>
+  <button type="button" data-scale=".8">80%</button>
+</div>
+<div class="stage-shell" aria-hidden="false">
+<main class="stage">
+  <section class="app" aria-label="Industrial predictive quality product demo">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">EV</div>
+        <div><strong>EVOCON Solutions</strong><span>Industrial Predictive Quality</span></div>
+      </div>
+      <div class="top-center">Plant 01 · Line 02 · Algorithm walkthrough · synthetic demonstration data</div>
+      <div class="top-pills">
+        <div class="pill"><i class="dot"></i> Local AI</div>
+        <div class="pill green"><i class="dot"></i> System Online</div>
+      </div>
+    </header>
+
+    <div class="main">
+      <article class="card visual-card">
+        <div class="card-header">
+          <div class="kicker">Visual + sensor loop</div>
+          <h2>From raw data to a prioritized action</h2>
+          <p>The demo loops through collection, normality learning, deviation detection, risk scoring and verified improvement.</p>
+        </div>
+        <div class="visual-wrap">
+          <div class="part-panel">
+            <div class="part-title">Part image</div>
+            <div class="part-stage">
+              <svg class="part-svg" viewBox="-180 -150 360 300" aria-hidden="true">
+                <ellipse cx="0" cy="115" rx="140" ry="32" fill="#1d1d1f" opacity=".12"/>
+                <circle cx="0" cy="0" r="126" fill="#7b8796"/>
+                <circle cx="-8" cy="-8" r="112" fill="#cbd5e1" stroke="#eef2f7" stroke-width="4"/>
+                <circle cx="0" cy="0" r="55" fill="#f8fafc" stroke="#64748b" stroke-width="13"/>
+                <circle cx="0" cy="0" r="27" fill="#e2e8f0" stroke="#94a3b8" stroke-width="5"/>
+                <g fill="#f8fafc" stroke="#64748b" stroke-width="5">
+                  <circle cx="0" cy="-86" r="16"/><circle cx="74" cy="-43" r="16"/><circle cx="74" cy="43" r="16"/>
+                  <circle cx="0" cy="86" r="16"/><circle cx="-74" cy="43" r="16"/><circle cx="-74" cy="-43" r="16"/>
+                </g>
+                <path d="M-106,-12 C-69,-43 -10,-55 37,-40 C77,-28 96,-2 105,20" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".40"/>
+                <line class="scan-line" x1="-138" y1="-132" x2="-138" y2="132" stroke="#0071e3" stroke-width="5" opacity=".65"/>
+              </svg>
+            </div>
+            <div class="part-caption">Camera + sensor input</div>
+            <div class="status-strip input">Input</div>
+          </div>
+
+          <div class="part-panel">
+            <div class="part-title">Heatmap + risk</div>
+            <div class="part-stage">
+              <svg class="part-svg" viewBox="-180 -150 360 300" aria-hidden="true">
+                <ellipse cx="0" cy="115" rx="140" ry="32" fill="#1d1d1f" opacity=".12"/>
+                <circle cx="0" cy="0" r="126" fill="#7b8796"/>
+                <circle cx="-8" cy="-8" r="112" fill="#cbd5e1" stroke="#eef2f7" stroke-width="4"/>
+                <circle cx="0" cy="0" r="55" fill="#f8fafc" stroke="#64748b" stroke-width="13"/>
+                <circle cx="0" cy="0" r="27" fill="#e2e8f0" stroke="#94a3b8" stroke-width="5"/>
+                <g fill="#f8fafc" stroke="#64748b" stroke-width="5">
+                  <circle cx="0" cy="-86" r="16"/><circle cx="74" cy="-43" r="16"/><circle cx="74" cy="43" r="16"/>
+                  <circle cx="0" cy="86" r="16"/><circle cx="-74" cy="43" r="16"/><circle cx="-74" cy="-43" r="16"/>
+                </g>
+                <path d="M-106,-12 C-69,-43 -10,-55 37,-40 C77,-28 96,-2 105,20" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".40"/>
+                <rect class="scan-glow" x="-150" y="-130" width="300" height="260" rx="22" fill="#0071e3" opacity=".06"/>
+                <line class="heat-scan" x1="-130" y1="-132" x2="-130" y2="132" stroke="#0071e3" stroke-width="6" opacity=".72"/>
+                <g class="heatmap-base">
+                  <ellipse cx="64" cy="-48" rx="70" ry="42" fill="#ff9f0a" opacity=".55"/>
+                  <ellipse cx="64" cy="-48" rx="42" ry="24" fill="#d70015" opacity=".45"/>
+                </g>
+                <g class="heatmap">
+                  <ellipse cx="64" cy="-48" rx="62" ry="35" fill="#d70015" opacity=".38"/>
+                  <ellipse cx="64" cy="-48" rx="38" ry="22" fill="#ff9f0a" opacity=".70"/>
+                  <path d="M35 -54 C52 -66 86 -55 105 -70" fill="none" stroke="#d70015" stroke-width="6" stroke-linecap="round"/>
+                </g>
+                <rect class="defect-outline" x="20" y="-88" width="112" height="74" rx="15" fill="none" stroke="#d70015" stroke-width="4"/>
+                <circle class="pulse" cx="64" cy="-48" r="44" fill="none" stroke="#ff453a" stroke-width="5"/>
+              </svg>
+            </div>
+            <div class="part-caption">Review output</div>
+            <div class="status-strip">Review</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="card algorithm-card">
+        <div class="card-header">
+          <div class="kicker">How the algorithm moves</div>
+          <h2>Six decisions, one operator queue</h2>
+          <p>Each step activates in sequence so the team can see what the product is doing.</p>
+        </div>
+        <div class="cloud-panel">
+          <h3>Feature cloud</h3>
+          <p>Normal points stay clustered; drifting observations move toward review.</p>
+          <svg class="cloud-svg" viewBox="0 0 440 132" preserveAspectRatio="none" aria-hidden="true">
+            <line class="cloud-grid" x1="20" y1="104" x2="420" y2="104"/>
+            <line class="cloud-grid" x1="70" y1="18" x2="70" y2="116"/>
+            <line class="cloud-grid" x1="190" y1="18" x2="190" y2="116"/>
+            <line class="cloud-grid" x1="310" y1="18" x2="310" y2="116"/>
+            <ellipse class="cluster-ring" cx="145" cy="68" rx="92" ry="42"/>
+            <path class="decision-arrow" d="M220 78 C270 66 315 52 378 37"/>
+            <circle class="point normal" cx="96" cy="72" r="6"/>
+            <circle class="point normal" cx="118" cy="56" r="6"/>
+            <circle class="point normal" cx="133" cy="82" r="5"/>
+            <circle class="point safe" cx="151" cy="64" r="6"/>
+            <circle class="point normal" cx="164" cy="88" r="5"/>
+            <circle class="point safe" cx="178" cy="51" r="6"/>
+            <circle class="point normal" cx="197" cy="71" r="5"/>
+            <circle class="point warn" cx="286" cy="54" r="7"/>
+            <circle class="point warn" cx="318" cy="45" r="7"/>
+            <circle class="point bad" cx="360" cy="32" r="8"/>
+            <circle class="point bad" cx="386" cy="46" r="7"/>
+          </svg>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="step-num">1</div><div><strong>Collect data</strong><span>Images, sensors and process values.</span></div><div class="mini-icon">IN</div></div>
+          <div class="step"><div class="step-num">2</div><div><strong>Learn normal</strong><span>Normal patterns become references.</span></div><div class="mini-icon">OK</div></div>
+          <div class="step"><div class="step-num">3</div><div><strong>Spot deviation</strong><span>Small visual or temporal changes appear.</span></div><div class="mini-icon">!</div></div>
+          <div class="step"><div class="step-num">4</div><div><strong>Score risk</strong><span>Part, cycle and machine are ranked.</span></div><div class="mini-icon">82</div></div>
+          <div class="step"><div class="step-num">5</div><div><strong>Recommend action</strong><span>Inspect first and confirm the cause.</span></div><div class="mini-icon">FIX</div></div>
+        </div>
+      </article>
+
+      <article class="card risk-card amber">
+        <div class="card-header">
+          <div class="kicker">Risk signal</div>
+          <h2>Risk rises, gets prioritized, then returns under control</h2>
+          <p>Risk is shown as an operating signal the team can act on.</p>
+        </div>
+        <div class="risk-body">
+          <div class="risk-meter">
+            <div class="risk-meter-grid">
+              <div>
+                <div class="risk-value" data-risk-value aria-label="Risk score">0.28</div>
+                <div class="risk-label">Risk level rises as the point cloud and heatmap drift away from normal.</div>
+                <div class="risk-track"><i></i></div>
+                <div class="state-row">
+                  <div class="state-pill normal">Normal</div>
+                  <div class="state-pill watch">Monitor</div>
+                  <div class="state-pill review">Review</div>
+                </div>
+              </div>
+              <div class="risk-tower"><span>Risk</span></div>
+            </div>
+          </div>
+          <div class="recommendation">
+            <h3>Recommended action</h3>
+            <p>Inspect Part A-1842 first. Check tool wear and surface mark before scaling inspection to the next batch.</p>
+          </div>
+          <div class="improvement">
+            <h3>After action</h3>
+            <p>Risk trend returns to monitor/normal. The system keeps watching for repeated deviation.</p>
+          </div>
+        </div>
+      </article>
+
+      <section class="card timeline-card">
+        <div class="mini-card">
+          <h3>Machine / piece improvement</h3>
+          <div class="machine-line">
+            <div class="machine">M02</div>
+            <div class="riskbar"><i></i></div>
+            <div style="font-weight:700;color:var(--blue-dark)">Live</div>
+          </div>
+          <p>Risk rises when the process starts drifting, then drops after the recommended inspection action.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Deviation timeline</h3>
+          <svg class="flow-svg" viewBox="0 0 650 90" preserveAspectRatio="none" aria-hidden="true">
+            <rect class="sensor-alert" x="390" y="8" width="180" height="70" rx="14" fill="#fff8ee" stroke="#ff9f0a"/>
+            <path class="sensor-path-1" d="M20 36 C80 20 128 52 190 34 C250 16 310 38 368 42 C430 48 484 66 630 74" fill="none" stroke="#0071e3" stroke-width="5" stroke-linecap="round"/>
+            <path class="sensor-path-2" d="M20 65 C110 60 170 66 236 55 C310 44 375 61 444 68 C510 76 575 72 630 68" fill="none" stroke="#248a3d" stroke-width="5" stroke-linecap="round"/>
+            <line x1="390" y1="10" x2="390" y2="80" stroke="#c66a00" stroke-width="3" stroke-dasharray="7 7"/>
+            <circle class="flow-dot" cx="20" cy="36" r="8" fill="#0071e3"/>
+          </svg>
+          <p>Temporal deviation starts before the final quality or maintenance problem becomes expensive.</p>
+        </div>
+        <div class="mini-card">
+          <h3>What the operator sees</h3>
+          <div class="operator-list">
+            <div class="operator-row"><span class="check">1</span><span>Review top-ranked part or machine first.</span></div>
+            <div class="operator-row"><span class="check">2</span><span>See where the anomaly appears and when it started.</span></div>
+            <div class="operator-row"><span class="check">3</span><span>Confirm the fix and keep monitoring the next cycles.</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+</div>
+</div>
+<script>
+(() => {
+  const value = document.querySelector("[data-risk-value]");
+  if (!value) return;
+  const cycleMs = 24000;
+  const phases = [
+    { until: 0.34, text: "0.28", color: "#248a3d" },
+    { until: 0.62, text: "0.64", color: "#c66a00" },
+    { until: 0.82, text: "0.91", color: "#d70015" },
+    { until: 1.01, text: "0.32", color: "#248a3d" }
+  ];
+  function tick(now) {
+    const progress = (now % cycleMs) / cycleMs;
+    const phase = phases.find((item) => progress < item.until) || phases[0];
+    value.textContent = phase.text;
+    value.style.color = phase.color;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+(() => {
+  const buttons = Array.from(document.querySelectorAll("[data-scale]"));
+  const shell = document.querySelector(".stage-shell");
+  const baseWidth = 1920;
+  const baseHeight = 1080;
+  const margin = 28;
+  let userScale = 1;
+  let activeToken = "1";
+
+  function fitScale() {
+    const fitW = Math.max(0.2, (window.innerWidth - margin) / baseWidth);
+    const fitH = Math.max(0.2, (window.innerHeight - margin) / baseHeight);
+    return Math.min(fitW, fitH, 1);
+  }
+
+  function applyScale() {
+    const scale = Math.max(0.2, fitScale() * userScale);
+    document.documentElement.style.setProperty("--demo-scale", scale.toFixed(4));
+    if (shell) {
+      shell.style.width = `${Math.round(baseWidth * scale)}px`;
+      shell.style.height = `${Math.round(baseHeight * scale)}px`;
+    }
+    buttons.forEach((button) => button.classList.toggle("active", button.dataset.scale === activeToken));
+  }
+
+  function setScale(token) {
+    activeToken = token;
+    userScale = Number.parseFloat(token) || 1;
+    applyScale();
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => setScale(button.dataset.scale));
+  });
+  applyScale();
+  window.addEventListener("resize", applyScale);
+})();
+</script>
+</body>
+</html>

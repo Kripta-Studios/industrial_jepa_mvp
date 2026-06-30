@@ -1,0 +1,5 @@
+data:
+  dataset: cwru_bearing
+  raw_root: data/raw/sensor/cwru_bearing
+  status: partial
+

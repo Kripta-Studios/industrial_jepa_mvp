@@ -1,0 +1,399 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{microtype}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\title{Disentangling Lifecycle Proxies, Sensor Features and Latent Predictive Representations for CNC Failure-Soon Risk Scoring}
+
+\author{EVOCON Solutions Research Group
+\thanks{This technical report describes the current state of the industrial\_jepa\_mvp codebase.}}
+
+\markboth{Technical Report,~Vol.~1, No.~1, June~2026}%
+{Disentangling Lifecycle Proxies, Sensor Features and Latent Predictive Representations}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+Predictive maintenance and failure forecasting for Computer Numerical Control (CNC) machinery are vital for modern smart manufacturing. This report audits lifecycle metadata, engineered physical features, self-supervised sensor representations and token-level latent prediction under multiple validation protocols. Standard operational validation is strongly dominated by temporal lifecycle proxies such as cycle counters. Under a no-cycle protocol and held-out operating regimes, physical sensor features provide substantial predictive value, but self-supervised JEPA embeddings do not systematically outperform engineered features. We additionally implement DenseSensorJEPA with SIGReg, scheduled contiguous span masking and latent re-masking, together with a token-level predictive model that estimates future latent sequences. DenseSensorJEPA converges stably with validation loss 0.6410, mean validation embedding standard deviation 0.6337 and no collapse flag. Metadata-only scoring reaches AUPRC 0.6609; metadata plus EWMA surprise reaches 0.6766; and the best no-action token-world-model surprise combination reaches 0.6960, a gain of 0.0352 over metadata only. The token model alone remains weak, with best inverted-surprise AUPRC 0.5040. Context conditioning does not improve the no-action protocol, and real-action evaluation remains pending because the available CNC columns are process context rather than verified time-varying control commands. These results support a hybrid deployment strategy: metadata/cycle and engineered sensor features remain the practical baseline, while token-level predictive features remain an experimental complement pending strict comparison under no-cycle and held-out-hardness protocols.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Predictive Maintenance, Joint Embedding Predictive Architecture (JEPA), Latent World Model, CNC Milling, Anomaly Detection.
+\end{IEEEkeywords}}
+
+\maketitle
+
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+Modern smart factories produce massive streams of high-frequency sensor data from CNC milling heads, including spindle currents, vibrations, and acoustic emissions. Transforming these streams into actionable prognostic alerts---specifically predicting whether a tool is ``failure-soon'' ($CycleToFailure \le K$)---is highly desirable to minimize unplanned downtime.
+
+Recently, self-supervised learning, and in particular Joint Embedding Predictive Architectures (JEPA)~\cite{assran2023ijepa}, have emerged as powerful frameworks for learning representations without raw-signal reconstruction. In industrial time series, a dense token encoder can learn local temporal structure through masked latent prediction, while a separate predictor can estimate future latent-token sequences. Process variables may be used as context, but they should not be called causal actions unless time-varying machine commands or setpoints are verified.
+
+However, industrial datasets are frequently ridden with lifecycle proxies (e.g., the cumulative cut number or tool age). In classical operational validation splits, a model can achieve high apparent prognostic performance by simply memorizing the cycle counter, which acts as a trivial surrogate for wear. When such leakage occurs, claims of learning complex physical dynamics or achieving state-of-the-art (SOTA) representation quality are severely undermined.
+
+In this work, we present a systematic evaluation of Sensor-JEPA representations, a dense token-level Sensor-JEPA and a context-optional latent predictive model. We evaluate them on the CNC Milling Process Dataset~\cite{nasa_cnc_dataset} (specifically, the locally available CNC milling dataset used in this repository) and construct a strict testing framework consisting of:
+\begin{itemize}
+    \item A \textbf{leakage and feature audit} checking for target columns or RUL indicators.
+    \item A matched-pair \textbf{incremental value benchmark} reporting performance deltas.
+    \item A \textbf{no-cycle protocol} that removes cycle index proxies.
+    \item \textbf{Hard generalization protocols} with completely held-out tools, cutting conditions, and material hardness levels.
+\end{itemize}
+
+\section{Related Work}
+Our work builds upon time-series representation learning, self-supervised predictive architectures, and industrial prognostics.
+
+\subsection{CNC Tool Wear and Predictive Maintenance}
+Early work on CNC tool wear relied on statistical time-domain and frequency-domain features (root mean square, spectral energy) mapped to classification layers. While deep architectures (CNNs, GRUs) have improved forecasting capacity, separating the operational cycle proxy from the physical signal remains an active area of concern.
+
+\subsection{Joint Embedding Predictive Architectures}
+Generative self-supervised learning methods (like autoencoders) reconstruct raw inputs, often wasting capacity on high-frequency noise. In contrast, JEPA~\cite{assran2023ijepa,feichtenhofer2024vjepa} operates entirely in latent space, predicting the embedding of a target region from a context region. DINO~\cite{caron2021dino,oquab2023dinov2} demonstrates that self-distilled dense visual features can become strong transfer representations, suggesting why patch-level baselines such as DINO, PatchCore~\cite{roth2022patchcore}, and PaDiM~\cite{defard2021padim} are mandatory comparators for the visual branch of this project.
+
+\subsection{Time Series Representation Learning}
+Frameworks such as TS2Vec~\cite{yue2022ts2vec} and ROCKET~\cite{dempster2020rocket} represent strong baselines for classifying temporal structures. Our evaluation benchmarks contrast JEPA embeddings directly against engineered statistical features and classical estimators.
+
+\section{Dataset and Problem Setup}
+We utilize the CNC Milling Process Dataset~\cite{nasa_cnc_dataset}, containing high-frequency measurements ($250\,\text{Hz}$) of acoustic emission, spindle vibration, and motor currents. The core classification task is forecasting whether a tool is in a ``failure-soon'' window:
+\begin{equation}
+    y_t^{(K)} = \mathbb{I}[CycleToFailure_t \le K]
+\end{equation}
+where $K$ is the failure horizon (e.g., $K=10$ or $K=20$ cycles), and $\mathbb{I}$ is the indicator function. The forecasting horizon $h$ represents the delay at which the prediction is made.
+
+To validate the models, we enforce three distinct protocols:
+\begin{enumerate}
+    \item \textbf{Operational}: The standard split where tools are split, but cycle counters and metadata are available to models.
+    \item \textbf{No-Cycle}: A protocol where any cumulative temporal index (cycle index) is deleted, forcing the model to rely only on process metadata or physical sensor measurements.
+    \item \textbf{Hard Generalization}: Splits where whole domains (such as cutting conditions, material hardness bins, or tool types) are completely omitted from the training set and reserved for testing.
+\end{enumerate}
+
+\subsection{Class Distribution and Split Safeguards}
+Due to the prognostic nature of tool wear, the ``failure-soon'' target $y_t^{(K)}$ is highly imbalanced, with positive labels occurring only in the terminal cycles of a tool's lifespan. In strict generalization splits (such as partitioning by tool ID or cutting conditions), certain subsets may contain no positive instances, leading to single-class warnings or undefined metrics during training. To handle this, our evaluation pipeline implements safeguards that verify class presence within each split and skip training or fallback to baseline metrics when a fold contains only negative samples.
+
+\section{Methods}
+The sensor evaluation contains four complementary feature families:
+\begin{enumerate}
+    \item \textbf{Metadata and lifecycle features}: process descriptors and, in the operational protocol, cycle-related variables.
+    \item \textbf{Engineered physical features}: time-domain and frequency-domain statistics extracted from raw sensor channels.
+    \item \textbf{Global Sensor-JEPA features}: current and predicted-future embeddings from the earlier representation-learning pipeline.
+    \item \textbf{Dense token-level predictive features}: local temporal tokens, predictive residuals and surprise summaries from the new DenseSensorJEPA and token-level predictor.
+\end{enumerate}
+
+\subsection{Dense Token-Level Sensor Representation}
+For a multichannel sensor window $X_t \in \mathbb{R}^{C \times L}$, DenseSensorJEPA produces a sequence of temporal latent tokens:
+\begin{equation}
+    Z_t = E_\theta(X_t) \in \mathbb{R}^{N \times D}.
+\end{equation}
+Training uses scheduled contiguous span masking. The masking ratio and span difficulty increase according to the training schedule. After encoding, masked token positions are replaced again by a learned latent mask token before prediction. This latent re-masking prevents the predictor from exploiting information leaked through masked positions.
+
+The dense encoder is regularized with SIGReg rather than the earlier VICReg-style objective. SIGReg constrains random one-dimensional projections of the aggregate latent distribution and is used together with explicit embedding-variance and collapse diagnostics. The masked-token objective is:
+\begin{equation}
+    \mathcal{L}_{\mathrm{dense}} =
+    \frac{1}{|M|}\sum_{j \in M}
+    \left\|\hat{Z}_{t,j}-Z^{\mathrm{target}}_{t,j}\right\|_2^2
+    + \lambda_{\mathrm{sig}}\mathcal{L}_{\mathrm{SIGReg}}.
+\end{equation}
+
+\subsection{Token-Level Predictive Model}
+The token-level predictive model estimates a future sequence of latent tokens:
+\begin{equation}
+    P_\phi(Z_t,c_t,h) \rightarrow \hat{Z}_{t+h},
+\end{equation}
+where $h$ is the prediction horizon and $c_t$ is optional process context. We explicitly distinguish:
+\begin{itemize}
+    \item \texttt{no\_action}: prediction from $Z_t$ and $h$ only;
+    \item \texttt{context}: prediction additionally conditioned on available CNC process variables;
+    \item \texttt{real\_action}: reserved for verified, temporally aligned machine commands or setpoints.
+\end{itemize}
+The available CNC variables are therefore treated as operational context. The present results do not support a causal control or real-action claim.
+
+For each future-token prediction, the residual and surprise are:
+\begin{equation}
+    R_{t,h}=Z_{t+h}-\hat{Z}_{t+h}, \qquad
+    S_{t,h}=d(\hat{Z}_{t+h},Z_{t+h}).
+\end{equation}
+We compute average, maximum, top-$k$ mean, EWMA, slope, 90th percentile and alert-persistence statistics. Direct and sign-inverted surprise are both evaluated because degradation may correspond to either an increase in prediction error or a more regular, more predictable terminal regime.
+
+\subsection{Engineered Sensor Features}
+To contrast the representations learned by Sensor-JEPA against classical baseline methods, we extract a comprehensive suite of domain-specific engineered features from the high-frequency sensor signals. For each window, we compute both time-domain and frequency-domain statistics:
+\begin{itemize}
+    \item \textbf{Time-domain features}: mean, standard deviation, root mean square, peak-to-peak amplitude, signal energy, skewness, kurtosis, crest factor and zero-crossing rate.
+    \item \textbf{Frequency-domain features}: spectral centroid, dominant frequency and band powers across multiple frequency bins.
+\end{itemize}
+These features represent the standard handcrafted characteristics traditionally used for CNC tool-wear monitoring and provide the practical physical baseline.
+
+\section{Experiments}
+All legacy benchmark deltas are calculated within matched seed, split, forecast horizon and failure-target settings. The earlier predictive grid evaluated horizons $h \in \{1,3,5,10,20\}$ and failure thresholds $K \in \{5,10,20\}$ across three random seeds (42, 123 and 999). The focused JEPA-vs-engineered benchmark used $h \in \{1,3,5\}$ and $K \in \{5,10,20\}$ across the same seeds. The new dense token-level results are reported as a current diagnostic and are not promoted to product evidence until they are repeated under matched no-cycle and held-out-hardness settings.
+
+Estimators consist primarily of Logistic Regression for matched feature comparisons. Random Forest, HistGradientBoosting, XGBoost, and LightGBM were audited as secondary tabular baselines, but the current tuned GBT family did not outperform Logistic Regression on the metadata/cycle baseline in this codebase. We therefore avoid claims that JEPA outperforms gradient-boosted trees.
+
+We measure the area under the precision-recall curve (AUPRC), area under the receiver operating characteristic (AUROC), Precision@10\%, Recall@10\%, F1, balanced accuracy, Brier score, expected calibration error, false alarms per tool, and lead-time statistics. Match-paired deltas are calculated as:
+\begin{equation}
+    \Delta_{AUPRC} = AUPRC(Model) - AUPRC(Metadata\_Only)
+\end{equation}
+within the same seed, horizon, and target setup.
+
+\subsection{Audit and Baseline Availability}
+Table~\ref{tab:audit} summarizes the validation status relevant to the interpretation of this work. The leakage and feature audits passed, but official strong time-series baselines were not locally available.
+
+\begin{table}[t]
+\centering
+\caption{Validation and baseline availability.}
+\label{tab:audit}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\columnwidth}{@{}Y Y@{}}
+\toprule
+Check & Status \\
+\midrule
+Forbidden label/RUL columns in encoder or context features & Passed \\
+Leakage report & Passed \\
+Feature audit & Passed \\
+Official MiniROCKET / MultiROCKET & Not installed locally \\
+Official TS2Vec & Not installed locally \\
+DenseSensorJEPA collapse diagnostic & Passed \\
+Repository test suite & 52 passed \\
+SOTA eligibility & Not claimed \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Results}
+In this section, we present the empirical evidence gathered across the different protocols.
+
+\subsection{Operational Protocol Performance (Proxy-dominated)}
+In the standard operational protocol, metadata (specifically cycle indicators) are available to the models. Under this setup, classifiers achieve very high metrics, but their performance is largely dominated by the temporal cycle proxies. Table~\ref{tab:operational} shows the results for various configurations under the operational protocol (3 seeds, $h=3$, $K=10$).
+
+\begin{table*}[t]
+\centering
+\caption{Operational Protocol AUPRC Results (3 Seeds, $h=3, K=10$)}
+\label{tab:operational}
+\small
+\begin{tabular}{p{0.68\textwidth}r}
+\toprule
+Model Configuration & Mean AUPRC \\
+\midrule
+Metadata only & 0.6164 $\pm$ 0.0579 \\
+Metadata + current JEPA embedding $z_t$ & 0.6428 $\pm$ 0.2125 \\
+Metadata + predicted future embedding $\hat{z}_{t+h}$ & 0.7007 $\pm$ 0.1428 \\
+Metadata + current $z_t$ + predicted future $\hat{z}_{t+h}$ & 0.6958 $\pm$ 0.1536 \\
+Metadata + world-model score & 0.6771 $\pm$ 0.1375 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{No-Cycle Sensor Evidence}
+Table~\ref{tab:nocycle} reports the aggregated AUPRC results for the \texttt{no-cycle} protocol. When cycle counter proxies are removed, metadata-only performance drops to an AUPRC of 0.2386. Raw and engineered sensors provide substantial improvements, with the engineered baseline leading at 0.5583, and the predicted future JEPA embedding close at 0.5502.
+
+\begin{table*}[t]
+\centering
+\caption{No-cycle aggregated AUPRC results (3 seeds, $h \in \{1,3,5\}$, $K \in \{5,10,20\}$).}
+\label{tab:nocycle}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{@{}Y c c@{}}
+\toprule
+Model / feature set & Mean AUPRC & Delta vs. metadata \\
+\midrule
+Metadata only, no cycle & 0.2386 & +0.0000 \\
+Current $z$ only & 0.4451 & +0.2065 \\
+Raw sensors only & 0.5200 & +0.2814 \\
+Metadata + current $z$ + future $z$ & 0.5370 & +0.2983 \\
+Predicted future $z$ only & 0.5502 & +0.3115 \\
+Engineered sensors only & 0.5583 & +0.3197 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{Hard Generalization Evidence}
+Table~\ref{tab:hardgen} lists AUPRC across the three hard generalization splits. Under held-out hardness, sensor features outperform metadatas significantly. However, under tool and cutting condition exclusions, the metadata baseline remains competitive.
+
+\begin{table*}[t]
+\centering
+\caption{Hard-generalization AUPRC (3 seeds, $h=3$, $K=10$).}
+\label{tab:hardgen}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{@{}l Y c@{}}
+\toprule
+Split type & Model configuration & AUPRC \\
+\midrule
+\textbf{Held-out hardness} & Metadata only & 0.5128 \\
+ & Current $z$ only & 0.6638 \\
+ & Metadata + current/future $z$ & 0.7150 \\
+ & Engineered sensors only & 0.7631 \\
+\midrule
+\textbf{Held-out cutting condition} & Raw sensors only & 0.6290 \\
+ & Current $z$ only & 0.7146 \\
+ & Metadata only & 0.7182 \\
+ & Metadata + predicted future $z$ & 0.7188 \\
+\midrule
+\textbf{Held-out tool} & Current $z$ only & 0.3604 \\
+ & Raw sensors only & 0.5742 \\
+ & Metadata only & 0.6273 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{JEPA vs Engineered Sensor Features}
+Table~\ref{tab:jepavseng} compares the representation quality of JEPA embeddings against manual engineered sensor features in the no-cycle split. Standalone JEPA embeddings perform comparably but do not beat engineered features, though adding them incrementally provides minor positive deltas.
+
+\begin{table*}[t]
+\centering
+\caption{JEPA vs. engineered features in the no-cycle split.}
+\label{tab:jepavseng}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{@{}Y c c@{}}
+\toprule
+Feature configuration & AUPRC (mean $\pm$ std.) & Delta \\
+\midrule
+Predicted future $z$ only & 0.5502 $\pm$ 0.2022 & -0.0082 \\
+Engineered sensors + future $z$ & 0.5670 $\pm$ 0.2513 & +0.0087 \\
+Engineered sensors + current $z$ & 0.5733 $\pm$ 0.2690 & +0.0150 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+Under the specific \texttt{held\_out\_hardness\_bin} protocol, combining features yields the highest performance, as shown in Table~\ref{tab:jepavseng_hardness}.
+
+\begin{table*}[t]
+\centering
+\caption{JEPA vs. engineered features in the held-out-hardness split.}
+\label{tab:jepavseng_hardness}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\textwidth}{@{}Y c@{}}
+\toprule
+Model configuration & AUPRC (mean $\pm$ std.) \\
+\midrule
+Predicted future $z$ only & 0.5540 $\pm$ 0.2027 \\
+Current $z$ only & 0.5816 $\pm$ 0.1863 \\
+Engineered sensors only & 0.6923 $\pm$ 0.1685 \\
+Engineered sensors + current $z$ & 0.7052 $\pm$ 0.1723 \\
+Engineered sensors + current/future $z$ & 0.7201 $\pm$ 0.1741 \\
+Metadata + engineered + current/future $z$ & 0.7269 $\pm$ 0.1694 \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+\subsection{DenseSensorJEPA and Token-Level Diagnostic}
+DenseSensorJEPA converged with validation loss 0.6410 and validation embedding standard deviation 0.6337. No collapse condition was triggered. These diagnostics indicate that the current limitation is not trivial representation collapse, but insufficient demonstrated downstream information beyond engineered physical features.
+
+Table~\ref{tab:dense} reports the current scoring diagnostic. The best token-level combination improves metadata-only AUPRC by 0.0352. However, the token model without metadata remains weak, and context conditioning does not outperform the no-action protocol.
+
+\begin{table*}[t]
+\centering
+\caption{DenseSensorJEPA and token-level predictive diagnostic.}
+\label{tab:dense}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{@{}Y c c Y@{}}
+\toprule
+Configuration & AUPRC & $\Delta$ vs. metadata & Interpretation \\
+\midrule
+Metadata only & 0.6609 & 0.0000 & contextual baseline \\
+Metadata + EWMA surprise & 0.6766 & +0.0157 & small positive increment \\
+Metadata + token-WM no-action avg. surprise & 0.6960 & +0.0352 & best current token result \\
+Token-WM inverted surprise only & 0.5040 & -- & weak standalone signal \\
+Context-conditioned token-WM & $<0.6960$ & -- & no improvement over no-action \\
+Real-action token-WM & pending & -- & requires verified commands/setpoints \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+The strongest standalone score uses sign-inverted surprise. This suggests that failure-proximal states may become more predictable, or that the predictor has learned lifecycle and operating-regime regularity rather than a classical anomaly score. The surprise direction must therefore be selected on development data and evaluated without leakage on held-out protocols.
+
+\section{Discussion}
+The dominance of metadata and cycle proxies in the operational protocol suggests that simple wear-stage classifiers are highly performant but fundamentally brittle. When the proxy is active, the model may learn the operational schedule rather than tool physics.
+
+Once cycle indicators are removed, physical signals such as vibration and current become necessary to establish classification signal. Under no-cycle evaluation, physical features improve AUPRC by up to approximately $+0.32$ over the metadata baseline. The comparison between self-supervised JEPA features and engineered features reveals the central result of this report: \textbf{JEPA features do not currently and systematically outperform engineered sensor features}. Earlier current/future embeddings provide small positive increments in selected matched comparisons, but the engineered baseline remains the practical standard.
+
+The new dense token-level architecture is technically successful. Scheduled span masking, latent re-masking and SIGReg produce stable training and no detected collapse. The token-level predictive model also adds a small signal over metadata-only scoring. Nevertheless, this is not the decisive comparison. The current result does not show that token-level surprise improves the full metadata/cycle plus engineered-feature baseline.
+
+The inverted-surprise result is also diagnostically important. Higher predictability near failure may arise when terminal wear regimes become repetitive, when the predictor has seen degraded cycles during pretraining, or when surprise tracks lifecycle density rather than physical abnormality. Healthy-only or early-life pretraining is therefore a useful follow-up ablation, but it should not replace the immediate matched comparison against engineered features.
+
+\section{Limitations}
+Several limitations must be highlighted:
+\begin{enumerate}
+    \item \textbf{Single-dataset focus}: sensor results are derived primarily from one CNC dataset. Verification on CWRU and Paderborn bearing datasets is pending.
+    \item \textbf{Missing official strong baselines}: standard implementations of MiniROCKET, MultiROCKET and TS2Vec were not locally available; SOTA eligibility is therefore not claimed.
+    \item \textbf{Imbalanced and strict splits}: some hard-generalization settings produce single-class folds or unstable estimates. Such cases are retained and reported rather than hidden.
+    \item \textbf{No real-action evidence}: the current CNC variables are process context, not verified time-varying control commands. The \texttt{real\_action} protocol remains pending.
+    \item \textbf{Incomplete product comparison}: the new token-level diagnostic improves metadata only, but has not yet been compared under matched conditions against \texttt{sensor\_engineered\_only} and \texttt{sensor\_engineered\_plus\_current\_z}.
+    \item \textbf{No causal claim}: neither context conditioning nor predictive surprise proves causal machine dynamics.
+    \item \textbf{Weak global visual JEPA}: the original global visual representation remains below strong frozen dense-feature anomaly baselines.
+\end{enumerate}
+
+\section{Commercial MVP Implications}
+Commercially, the evidence supports a pragmatic hybrid posture:
+\begin{itemize}
+    \item The core sensor risk-scoring system should deploy metadata/cycle and engineered sensor features as the robust baseline.
+    \item DenseSensorJEPA and token-level predictive surprise should be described as experimental feature augmentations, not as replacements for engineered features.
+    \item The current best token result is a \texttt{no\_action} model. Available CNC variables should be presented as process context; real-action modeling remains pending.
+    \item The visual quality module should start from strong frozen-feature baselines: ResNet or DINO-family backbones with PatchCore-style memory and PaDiM-style scoring.
+    \item A pilot should be considered successful only if it improves the customer's own baseline on pre-agreed metrics such as Precision@10\%, false alarms per tool, lead time and calibration.
+\end{itemize}
+
+\subsection{Visual Quality Product Baseline}
+For the visual anomaly detection branch, the commercially defensible product is not the original global Visual-JEPA prototype. That model uses a single image-level embedding and produces weak localization heatmaps. The product path should instead expose frozen dense visual backbones, such as ImageNet-pretrained ResNet or DINO-family models when locally available, coupled with PatchCore-lite nearest-neighbor memory or PaDiM-lite position-wise Gaussian scoring. DenseVisualJEPA remains a research and adaptation path that should be enabled only if it improves over these baselines on a customer validation split.
+
+\begin{table}[t]
+\centering
+\caption{Visual anomaly smoke benchmark on the MVTec bottle quick split.}
+\label{tab:visual_smoke}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.10}
+\begin{tabularx}{\columnwidth}{@{}Y c c@{}}
+\toprule
+Model & AUROC & AUPRC \\
+\midrule
+Pixel-stat baseline & 0.7778 & 0.9205 \\
+DenseVisualJEPA + PaDiM-lite & 0.8159 & 0.9408 \\
+ResNet18 + PatchCore-lite & 0.9881 & 0.9963 \\
+ResNet18 + PaDiM-lite & 0.9889 & 0.9965 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Table~\ref{tab:visual_smoke} is a smoke benchmark, not a final multi-category claim. It is nevertheless operationally important: in this quick run, frozen ResNet18 features with PatchCore-lite or PaDiM-lite dominate the experimental DenseVisualJEPA scorer. DINO was not executed in this smoke run and should be reported as available only when weights and local cache are present.
+
+\section{Future Work}
+The immediate next experiment is to evaluate the token-level predictive model under the \texttt{no\_cycle} and \texttt{held\_out\_hardness\_bin} protocols. The decisive comparisons are against \texttt{sensor\_engineered\_only} and \texttt{sensor\_engineered\_plus\_current\_z} with matched seeds, horizons and targets. Only a consistent positive delta over these baselines would justify promoting token-level surprise from an experimental module to a product component.
+
+Additional work should evaluate healthy-only or early-life pretraining, vector-valued token residual features rather than only scalar surprise, multi-horizon residual growth, official MiniROCKET/MultiROCKET/TS2Vec baselines and external transfer to CWRU or Paderborn. Real-action evaluation requires verified temporally aligned commands or setpoints.
+
+\section{Conclusion}
+The dense token-level Sensor-JEPA is technically stable and avoids detected representation collapse. Its local and future-token surprise features provide a small improvement over metadata-only scoring, with the best no-action configuration increasing AUPRC from 0.6609 to 0.6960. However, neither DenseSensorJEPA nor the token-level predictive model has yet demonstrated an improvement over the practical metadata/cycle plus engineered sensor-feature baseline. Context conditioning does not improve the no-action result, and real-action evaluation remains pending. The current evidence therefore supports a hybrid product architecture in which classical physical features remain the primary sensor module and token-level predictive representations remain optional experimental augmentations.
+
+\begin{thebibliography}{99}
+\bibitem{assran2023ijepa} M. Assran et al., ``Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture,'' \emph{CVPR}, 2023.
+\bibitem{feichtenhofer2024vjepa} C. Feichtenhofer et al., ``V-JEPA: Latent Video Prediction for Visual Representation Learning,'' 2024.
+\bibitem{caron2021dino} M. Caron et al., ``Emerging Properties in Self-Supervised Vision Transformers,'' \emph{ICCV}, 2021.
+\bibitem{oquab2023dinov2} M. Oquab et al., ``DINOv2: Learning Robust Visual Features without Supervision,'' \emph{arXiv:2304.07193}, 2023.
+\bibitem{roth2022patchcore} K. Roth et al., ``Towards Total Recall in Industrial Anomaly Detection,'' \emph{CVPR}, 2022.
+\bibitem{defard2021padim} T. Defard et al., ``PaDiM: A Patch Distribution Modeling Framework for Anomaly Detection and Localization,'' \emph{ICPR}, 2021.
+\bibitem{yue2022ts2vec} Z. Yue et al., ``TS2Vec: Towards Universal Representation of Time Series,'' \emph{AAAI}, 2022.
+\bibitem{dempster2020rocket} A. Dempster, F. Petitjean, and G. I. Webb, ``ROCKET: Exceptionally Fast and Accurate Time Series Classification Using Random Convolutional Kernels,'' \emph{Data Mining and Knowledge Discovery}, 2020.
+\bibitem{nasa_cnc_dataset} A. Agogino and K. Goebel, ``Milling Data Set,'' NASA Ames Prognostics Data Repository, 2007.
+\end{thebibliography}
+
+\end{document}

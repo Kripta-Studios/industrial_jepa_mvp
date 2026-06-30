@@ -1,0 +1,5 @@
+data:
+  dataset: ai4i
+  raw_root: data/raw/sensor/ai4i
+  status: pending
+

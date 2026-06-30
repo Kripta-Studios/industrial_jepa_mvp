@@ -1,0 +1,5 @@
+data:
+  dataset: mvtec_3d_ad
+  raw_root: data/raw/visual/mvtec_3d_ad
+  status: pending
+

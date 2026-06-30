@@ -1,0 +1,1 @@
+"""LeJEPA/SIGReg components."""

@@ -1,0 +1,5 @@
+data:
+  dataset: neu_surface
+  raw_root: data/raw/visual/neu_surface
+  status: pending
+

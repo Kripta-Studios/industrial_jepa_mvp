@@ -1,0 +1,29 @@
+project: visual_jepa
+seed: 42
+device: auto
+data:
+  dataset: mvtec_ad
+  raw_root: data/raw/visual/mvtec_ad
+  category: bottle
+  image_size: 128
+  num_workers: 0
+  max_train_images: 220
+  max_test_images: 120
+  manifest_path: data/manifests/mvtec_bottle.csv
+model:
+  encoder: small_conv
+  embedding_dim: 128
+  hidden_dim: 128
+  predictor_hidden_dim: 256
+  patch_size: 16
+  mask_ratio: 0.5
+  sigreg_weight: 0.05
+training:
+  batch_size: 24
+  pretrain_epochs: 4
+  learning_rate: 0.001
+  weight_decay: 0.0001
+outputs:
+  root: outputs/visual_jepa/demo_quick
+  checkpoint: outputs/visual_jepa/demo_quick/checkpoints/visual_jepa.pt
+

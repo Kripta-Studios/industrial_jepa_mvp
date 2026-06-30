@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>EVOCON Industrial Predictive Quality - Audi MVP Pitch</title>
+<style>
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --ink:#1d1d1f;
+  --muted:#666a73;
+  --line:rgba(29,29,31,.10);
+  --blue:#0071e3;
+  --blue-dark:#0057b8;
+  --green:#248a3d;
+  --amber:#c66a00;
+  --red:#d70015;
+  --shadow:0 18px 60px rgba(0,0,0,.08);
+  --radius:30px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  background:
+    radial-gradient(circle at 16% 6%,rgba(0,113,227,.09),transparent 30%),
+    radial-gradient(circle at 86% 90%,rgba(36,138,61,.07),transparent 30%),
+    var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.topbar{
+  position:fixed;z-index:30;left:0;right:0;top:0;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 30px;border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.84);backdrop-filter:saturate(180%) blur(22px);
+}
+.brand{display:flex;align-items:center;gap:11px;font-weight:750}
+.brand-mark{width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,#2f80ed,#0057b8);color:white;display:grid;place-items:center;font-size:.72rem;font-weight:850}
+.top-note{color:var(--muted);font-size:.82rem}
+.deck{height:100vh;position:relative;overflow:hidden}
+.slide{
+  position:absolute;inset:0;padding:88px clamp(38px,6vw,94px) 80px;
+  display:flex;align-items:center;opacity:0;pointer-events:none;
+  transform:translate3d(34px,0,0) scale(.992);
+  transition:opacity .26s ease,transform .36s cubic-bezier(.2,.8,.2,1);
+}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.inner{width:min(1240px,100%);margin:0 auto}
+.kicker{display:inline-flex;align-items:center;gap:9px;color:var(--blue);font-size:.72rem;font-weight:780;letter-spacing:.13em;text-transform:uppercase;margin-bottom:18px}
+.kicker::before{content:"";width:25px;height:1px;background:var(--blue)}
+h1{font-size:clamp(3.55rem,6.9vw,6.65rem);line-height:.93;letter-spacing:-.075em;font-weight:770;margin-bottom:24px}
+h2{font-size:clamp(2.45rem,4.7vw,4.8rem);line-height:.96;letter-spacing:-.065em;font-weight:745;margin-bottom:18px}
+h3{font-size:1.22rem;line-height:1.16;letter-spacing:-.026em;margin-bottom:8px}
+p{font-size:1.08rem;line-height:1.44;color:var(--muted)}
+.lead{max-width:940px;font-size:1.48rem;line-height:1.34;color:#3a3a3c}
+.grid{display:grid;gap:18px}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+.grid.four{grid-template-columns:repeat(4,1fr)}
+.card{
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow);
+  padding:28px;
+  position:relative;
+  overflow:hidden;
+}
+.card.soft{box-shadow:0 8px 28px rgba(0,0,0,.055)}
+.badge-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,113,227,.15);background:#f2f7ff;color:var(--blue-dark);border-radius:999px;padding:9px 14px;font-weight:730;font-size:.88rem}
+.badge.green{border-color:rgba(36,138,61,.18);background:#eaf8ee;color:var(--green)}
+.badge.amber{border-color:rgba(198,106,0,.18);background:#fff7e8;color:var(--amber)}
+.metric{font-size:3.35rem;line-height:1;font-weight:790;letter-spacing:-.075em;color:var(--blue);margin-bottom:10px}
+.money{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
+.money .card{min-height:178px;padding:22px}
+.money .metric{font-size:2.05rem;color:var(--green)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:30px}
+.node{border:1px solid var(--line);background:#fff;border-radius:24px;padding:22px;min-height:168px;display:flex;flex-direction:column;justify-content:center;text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.045)}
+.node strong{font-size:1.08rem;margin-bottom:8px}
+.node span{font-size:.90rem;line-height:1.28;color:var(--muted)}
+.mini-diagram{
+  height:430px;border:1px solid var(--line);border-radius:32px;background:linear-gradient(160deg,#fff,#f4f7fb);
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:28px;box-shadow:var(--shadow)
+}
+.part-stage{border:1px solid rgba(0,113,227,.10);border-radius:24px;background:#f4f7fb;display:grid;place-items:center;position:relative;overflow:hidden}
+.part{width:210px;height:210px;border-radius:50%;background:linear-gradient(145deg,#d8e0ea,#8090a3);box-shadow:inset -16px -22px 0 rgba(29,29,31,.14),0 26px 36px rgba(29,29,31,.12);position:relative}
+.part::before{content:"";position:absolute;inset:56px;border:14px solid #66768a;border-radius:50%;background:#f5f8fc}
+.part::after{content:"";position:absolute;right:28px;top:64px;width:86px;height:44px;border-radius:50%;background:radial-gradient(circle,#d70015 0 18%,#ff9f0a 19% 48%,rgba(255,159,10,.25) 49% 100%);opacity:.74}
+.scan{position:absolute;left:16%;right:16%;top:50%;height:3px;background:var(--blue);box-shadow:0 0 20px rgba(0,113,227,.45);animation:scan 3.4s infinite}
+@keyframes scan{0%{transform:translateY(-145px);opacity:0}15%,85%{opacity:1}100%{transform:translateY(145px);opacity:0}}
+.ranking{display:grid;gap:14px}
+.rank-row{display:grid;grid-template-columns:120px 1fr 76px;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.bar{height:12px;border-radius:999px;background:#e8e8ed;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#34c759,#ff9f0a,#ff453a)}
+.script{background:#0f172a;color:#e5eefc;border-radius:24px;padding:26px;font-family:"SF Mono",Consolas,monospace;font-size:1rem;line-height:1.55;box-shadow:0 18px 50px rgba(15,23,42,.18)}
+.script b{color:#93c5fd}
+.checklist{display:grid;gap:14px;margin-top:24px}
+.check{display:grid;grid-template-columns:34px 1fr;gap:13px;align-items:start}
+.check i{width:30px;height:30px;border-radius:11px;background:#eaf8ee;color:var(--green);font-style:normal;display:grid;place-items:center;font-weight:850}
+.controls{
+  position:fixed;z-index:40;left:0;right:0;bottom:0;height:58px;display:flex;align-items:center;justify-content:center;gap:12px;
+  border-top:1px solid var(--line);background:rgba(255,255,255,.84);backdrop-filter:saturate(180%) blur(20px)
+}
+.controls button{border:1px solid rgba(0,113,227,.18);background:#f2f7ff;color:var(--blue-dark);height:34px;border-radius:999px;padding:0 16px;font-weight:735;cursor:pointer}
+.counter{min-width:72px;text-align:center;color:var(--muted);font-size:.86rem}
+@media (max-width:1000px){
+  .grid.three,.grid.four,.money,.flow{grid-template-columns:1fr 1fr}
+  h1{font-size:3.7rem}
+}
+@media print{
+  @page{size:16in 9in;margin:0}
+  html,body{width:auto;height:auto;overflow:visible;background:#fff}
+  .topbar,.controls{display:none!important}
+  .deck{height:auto;overflow:visible;position:static;background:#f5f5f7}
+  .slide{
+    position:relative;inset:auto;width:16in;height:9in;padding:.72in .86in;
+    opacity:1!important;pointer-events:auto;transform:none!important;
+    page-break-after:always;break-after:page;
+    background:
+      radial-gradient(circle at 16% 6%,rgba(0,113,227,.09),transparent 30%),
+      radial-gradient(circle at 86% 90%,rgba(36,138,61,.07),transparent 30%),
+      var(--bg);
+  }
+  .slide:last-child{page-break-after:auto;break-after:auto}
+  .inner{width:100%;max-width:12.6in}
+  h1{font-size:.76in} h2{font-size:.54in}
+  .lead{font-size:.18in} p{font-size:.135in}
+  .card,.mini-diagram{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><div class="brand-mark">EV</div><div>EVOCON Solutions</div></div>
+  <div class="top-note">Industrial Predictive Quality · Audi MVP pitch</div>
+</div>
+
+<main class="deck" id="deck">
+  <section class="slide active"><div class="inner">
+    <div class="kicker">The meeting message</div>
+    <h1>Audi can catch quality and machine problems earlier.</h1>
+    <p class="lead">EVOCON turns existing factory images, sensor signals and process logs into heatmaps, risk scores and a ranked list of what to inspect first.</p>
+    <div class="badge-row">
+      <span class="badge">One line</span>
+      <span class="badge">One process</span>
+      <span class="badge">4-6 week pilot</span>
+      <span class="badge green">Clear go / no-go</span>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">Why Audi needs this</div>
+    <h2>Premium quality is expensive when detection is late.</h2>
+    <div class="grid four">
+      <div class="card soft"><h3>Late visual defects</h3><p>Small surface, assembly or supplier defects become expensive once they move downstream.</p></div>
+      <div class="card soft"><h3>Machine drift</h3><p>Robots, tools, presses, conveyors and test benches can drift before a hard failure appears.</p></div>
+      <div class="card soft"><h3>Signal overload</h3><p>Cameras, PLC, SCADA, torque logs and test logs are usually reviewed separately.</p></div>
+      <div class="card soft"><h3>Alarm fatigue</h3><p>Teams do not need more dashboards. They need a reliable priority list.</p></div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">How Audi wins money</div>
+    <h2>The pilot attacks five cost levers.</h2>
+    <div class="money">
+      <div class="card soft"><div class="metric">01</div><h3>Less scrap</h3><p>Catch quality drift before a full batch is affected.</p></div>
+      <div class="card soft"><div class="metric">02</div><h3>Less rework</h3><p>Send human review to the parts that matter first.</p></div>
+      <div class="card soft"><div class="metric">03</div><h3>Less downtime</h3><p>Spot machine drift before it becomes a stoppage.</p></div>
+      <div class="card soft"><div class="metric">04</div><h3>Faster launches</h3><p>Find process instability during ramp-up and changes.</p></div>
+      <div class="card soft"><div class="metric">05</div><h3>Better suppliers</h3><p>Rank lots, images or stations with evidence.</p></div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">What the product is</div>
+    <h2>An inspection and early-warning copilot for the plant.</h2>
+    <div class="grid three">
+      <div class="card"><h3>Visual quality</h3><p>Images in. Heatmaps and review ranking out. Best for surfaces, welds, paint, PCBs, packaging and assemblies.</p></div>
+      <div class="card"><h3>Machine risk</h3><p>Vibration, current, temperature, torque, SCADA or test logs become a top-risk queue.</p></div>
+      <div class="card"><h3>Process deviation</h3><p>The system learns normal process behavior and marks when reality starts to drift.</p></div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">Why EVOCON is the best pilot partner</div>
+    <h2>Automation experience plus practical AI validation.</h2>
+    <div class="grid two">
+      <div class="card">
+        <h3>Not a generic AI demo</h3>
+        <p>EVOCON already speaks factory language: PLC, robotics, production support, onsite/offline work and industrial project delivery.</p>
+      </div>
+      <div class="card">
+        <h3>Validation-first approach</h3>
+        <p>We compare against simple rules and strong baselines. If the pilot does not improve the current process, the customer still gets a clear go/no-go report.</p>
+      </div>
+      <div class="card">
+        <h3>Local, low-risk start</h3>
+        <p>The first pilot can run locally on historical data. No plant integration is required to prove the first business case.</p>
+      </div>
+      <div class="card">
+        <h3>Actionable output</h3>
+        <p>The output is not a research metric. It is a ranked queue: part, cycle, machine, batch or line.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">What Audi will see</div>
+    <h2>Clear evidence, not a black box.</h2>
+    <div class="mini-diagram">
+      <div class="part-stage"><div class="part"></div><div class="scan"></div></div>
+      <div class="ranking">
+        <div class="rank-row"><strong>Part A-1842</strong><div class="bar"><span style="width:94%"></span></div><strong style="color:var(--amber)">Review</strong></div>
+        <div class="rank-row"><strong>Station 07</strong><div class="bar"><span style="width:81%"></span></div><strong style="color:var(--amber)">Review</strong></div>
+        <div class="rank-row"><strong>Tool M02</strong><div class="bar"><span style="width:62%"></span></div><strong style="color:var(--blue)">Monitor</strong></div>
+        <div class="rank-row"><strong>Batch 1811</strong><div class="bar"><span style="width:28%"></span></div><strong style="color:var(--green)">Normal</strong></div>
+        <p>The operator sees where the anomaly is, when the deviation started, and what to check first.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner">
+    <div class="kicker">Pilot plan</div>
+    <h2>4-6 weeks. One process. Measured value.</h2>
+    <div class="flow">
+      <div class="node"><strong>1. Pick use case</strong><span>Visual defect, machine drift, test-log anomaly or supplier quality.</span></div>
+      <div class="node"><strong>2. Data audit</strong><span>Check images, sensors, timestamps, labels and process context.</span></div>
+      <div class="node"><strong>3. Build baselines</strong><span>Compare against current rules and practical industrial baselines.</span></div>
+      <div class="node"><strong>4. MVP model</strong><span>Heatmaps, risk scores, temporal deviation and top-k ranking.</span></div>
+      <div class="node"><strong>5. Decision</strong><span>Business report, demo and go/no-go integration plan.</span></div>
+    </div>
+  </div></section>
+
+  <section class="slide"><div class="inner grid two">
+    <div>
+      <div class="kicker">What we need from Audi</div>
+      <h2>Give us one narrow process to prove value.</h2>
+      <div class="checklist">
+        <div class="check"><i>1</i><div><h3>One process owner</h3><p>Someone who knows what late detection costs and what a useful alert looks like.</p></div></div>
+        <div class="check"><i>2</i><div><h3>One data owner</h3><p>Historical images, sensor traces, test logs, PLC/SCADA exports or quality events.</p></div></div>
+        <div class="check"><i>3</i><div><h3>One success metric</h3><p>Earlier warning, fewer false alarms, less rework, better inspection ranking or faster root-cause review.</p></div></div>
+      </div>
+    </div>
+    <div class="script">
+      <b>Ask for the next step:</b><br><br>
+      "Let us choose one production process and run a 30-minute technical scoping call. If the data is suitable, EVOCON can deliver a pilot result in 4-6 weeks: heatmaps, risk ranking, metrics and a clear go/no-go recommendation."
+    </div>
+  </div></section>
+</main>
+
+<div class="controls">
+  <button type="button" id="prev">Prev</button>
+  <div class="counter"><span id="idx">1</span> / <span id="total">8</span></div>
+  <button type="button" id="next">Next</button>
+</div>
+
+<script>
+(() => {
+  const slides = Array.from(document.querySelectorAll(".slide"));
+  const idx = document.getElementById("idx");
+  const total = document.getElementById("total");
+  let current = 0;
+  total.textContent = String(slides.length);
+  function show(n){
+    current = (n + slides.length) % slides.length;
+    slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+    idx.textContent = String(current + 1);
+  }
+  document.getElementById("prev").addEventListener("click", () => show(current - 1));
+  document.getElementById("next").addEventListener("click", () => show(current + 1));
+  window.addEventListener("keydown", (event) => {
+    if (["ArrowRight","PageDown"," "].includes(event.key)) show(current + 1);
+    if (["ArrowLeft","PageUp","Backspace"].includes(event.key)) show(current - 1);
+  });
+  show(0);
+})();
+</script>
+</body>
+</html>

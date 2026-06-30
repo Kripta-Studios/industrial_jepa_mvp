@@ -1,0 +1,14 @@
+seed: 42
+project: industrial_world_model
+task: leworldmodel
+dataset:
+  name: cnc_milling
+  root: data/raw/sensor/cnc_milling
+model:
+  latent_dim: 32
+  action_dim: 8
+loss:
+  lambda_sigreg: 0.05
+train:
+  epochs: 2
+output_dir: outputs/industrial_world_model/leworldmodel

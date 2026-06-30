@@ -1,0 +1,41 @@
+project: sensor_jepa
+seed: 42
+device: auto
+data:
+  dataset: cnc_milling
+  raw_root: data/raw/sensor/cnc_milling
+  processed_path: data/processed/sensor_cnc_windows.npz
+  manifest_path: data/manifests/cnc_windows.csv
+  window_length: 8
+  stride: 1
+  split_by: tool
+  val_fraction: 0.15
+  test_fraction: 0.20
+  max_windows: null
+  task: classification
+model:
+  encoder: conv1d
+  input_channels: auto
+  embedding_dim: 128
+  hidden_dim: 128
+  predictor_hidden_dim: 256
+  temporal_mask_ratio: 0.4
+  channel_mask_ratio: 0.15
+  sigreg_weight: 0.05
+training:
+  batch_size: 64
+  pretrain_epochs: 8
+  probe_max_iter: 500
+  finetune_epochs: 10
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  label_fraction: 1.0
+world_model:
+  epochs: 8
+  forecast_horizon: 1
+  failure_horizon_cycles: 10
+  learning_rate: 0.001
+  sigreg_weight: 0.05
+outputs:
+  root: outputs/sensor_jepa/demo_quick
+  checkpoint: outputs/sensor_jepa/demo_quick/checkpoints/sensor_jepa.pt

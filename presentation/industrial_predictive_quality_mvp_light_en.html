@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>Industrial Predictive Quality MVP</title>
+<style>
+
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface-soft:#fbfbfd;
+  --surface-blue:#f2f7ff;
+  --ink:#1d1d1f;
+  --ink-soft:#3a3a3c;
+  --muted:#6e6e73;
+  --line:rgba(29,29,31,.10);
+  --line-strong:rgba(29,29,31,.16);
+  --blue:#0071e3;
+  --blue-dark:#0057b8;
+  --green:#248a3d;
+  --amber:#c66a00;
+  --red:#d70015;
+  --shadow:0 16px 50px rgba(0,0,0,.07);
+  --shadow-soft:0 8px 28px rgba(0,0,0,.055);
+  --radius-xl:30px;
+  --radius-lg:22px;
+  --radius-md:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 4%,rgba(0,113,227,.07),transparent 28%),
+    radial-gradient(circle at 86% 88%,rgba(52,199,89,.055),transparent 30%),
+    var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.45;
+}
+button{font:inherit}
+.deck{height:100vh;position:relative;overflow:hidden}
+.slide{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  padding:82px clamp(34px,6vw,94px) 86px;
+  opacity:0;
+  pointer-events:none;
+  transform:translate3d(44px,0,0) scale(.992);
+  transition:opacity .34s ease,transform .48s cubic-bezier(.2,.8,.2,1);
+}
+.slide::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 18%,rgba(0,113,227,.055),transparent 24%),
+    linear-gradient(to bottom,rgba(255,255,255,.40),rgba(255,255,255,0));
+}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto}
+.topbar{
+  position:fixed;
+  z-index:30;
+  left:0;right:0;top:0;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.78);
+  backdrop-filter:saturate(180%) blur(22px);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+}
+.brand{display:flex;align-items:center;gap:11px;font-weight:650;letter-spacing:-.015em}
+.brand-mark{
+  width:30px;height:30px;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  color:white;
+  background:linear-gradient(145deg,#2f80ed,#0057b8);
+  font-size:.68rem;
+  font-weight:800;
+  box-shadow:0 5px 16px rgba(0,113,227,.20);
+}
+.top-note{color:var(--muted);font-size:.82rem}
+.kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--blue);
+  font-size:.72rem;
+  font-weight:720;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+.kicker::before{
+  content:"";
+  width:24px;height:1px;
+  background:var(--blue);
+}
+h1{
+  max-width:1040px;
+  font-size:clamp(3.2rem,6.5vw,6.25rem);
+  line-height:.96;
+  letter-spacing:-.068em;
+  font-weight:700;
+  margin-bottom:24px;
+}
+h1 .gradient,h2 .gradient{
+  background:linear-gradient(95deg,#1d1d1f 0%,#0068d9 58%,#37a4ff 100%);
+  color:transparent;
+  background-clip:text;
+  -webkit-background-clip:text;
+}
+h2{
+  max-width:1000px;
+  font-size:clamp(2.3rem,4.5vw,4.45rem);
+  line-height:1.03;
+  letter-spacing:-.055em;
+  font-weight:680;
+  margin-bottom:18px;
+}
+h3{
+  font-size:1.1rem;
+  line-height:1.25;
+  font-weight:650;
+  letter-spacing:-.018em;
+  margin-bottom:8px;
+}
+.lead{
+  max-width:920px;
+  color:var(--ink-soft);
+  font-size:clamp(1.08rem,1.75vw,1.38rem);
+  line-height:1.56;
+}
+.small{font-size:.87rem;color:var(--muted)}
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.36fr) minmax(330px,.64fr);
+  gap:50px;
+  align-items:center;
+}
+.hero-panel{
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  padding:27px;
+  background:rgba(255,255,255,.88);
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.hero-panel::after{
+  content:"";
+  position:absolute;
+  width:220px;height:220px;
+  border-radius:50%;
+  right:-92px;top:-105px;
+  background:radial-gradient(circle,rgba(0,113,227,.12),transparent 70%);
+}
+.badges{display:flex;gap:9px;flex-wrap:wrap;margin-top:30px}
+.badge{
+  padding:8px 12px;
+  border:1px solid rgba(0,113,227,.12);
+  background:rgba(0,113,227,.055);
+  border-radius:999px;
+  color:var(--blue-dark);
+  font-size:.75rem;
+  font-weight:620;
+}
+.signal-stack{display:grid;gap:11px}
+.signal{
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface-soft);
+}
+.signal-icon,.icon{
+  width:42px;height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  background:linear-gradient(145deg,#eef5ff,#f8fbff);
+  color:var(--blue);
+  border:1px solid rgba(0,113,227,.08);
+  font-size:1.1rem;
+  font-weight:800;
+}
+.signal strong{font-size:.91rem;font-weight:650}
+.signal span{font-size:.76rem;color:var(--muted)}
+.status{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:#30d158;
+  box-shadow:0 0 0 4px rgba(48,209,88,.11);
+}
+.grid{display:grid;gap:17px;margin-top:29px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{
+  position:relative;
+  overflow:hidden;
+  min-height:150px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+}
+.card::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,#0071e3,#55aaff);
+  opacity:.75;
+}
+.card p,.card li{color:var(--muted)}
+.card .icon{margin-bottom:17px}
+.card.emphasis{background:linear-gradient(145deg,#ffffff,#f6f9fd)}
+.card.green::before{background:#34c759}
+.card.amber::before{background:#ff9f0a}
+.card.red::before{background:#ff453a}
+.problem-flow{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;
+  gap:16px;
+  align-items:center;
+  margin-top:36px;
+}
+.flow-card{
+  min-height:184px;
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+}
+.flow-arrow{font-size:1.75rem;color:#8e8e93;font-weight:600}
+.flow-card .num{
+  font-size:.7rem;
+  color:var(--blue);
+  font-weight:720;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.module{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.module .module-tag{
+  display:inline-flex;
+  align-self:flex-start;
+  padding:6px 9px;
+  border-radius:999px;
+  color:var(--blue);
+  background:rgba(0,113,227,.065);
+  font-size:.67rem;
+  font-weight:720;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+}
+.module ul{list-style:none;display:grid;gap:8px;margin-top:17px}
+.module li::before{content:"•";color:var(--blue);font-weight:900;margin-right:9px}
+.card.green .module-tag{color:var(--green);background:rgba(52,199,89,.08)}
+.card.green li::before{color:var(--green)}
+.card.amber .module-tag{color:var(--amber);background:rgba(255,159,10,.08)}
+.card.amber li::before{color:var(--amber)}
+.arch{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:10px;
+  align-items:center;
+  margin-top:35px;
+}
+.arch-node{
+  min-height:120px;
+  padding:17px 14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.arch-node strong{font-size:.88rem;color:var(--ink)}
+.arch-node span{font-size:.74rem;color:var(--muted);margin-top:6px}
+.arch-arrow{text-align:center;color:#8e8e93;font-size:1.2rem;font-weight:600}
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  margin-top:31px;
+}
+.metric-card{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.metric{
+  font-size:clamp(2.2rem,4vw,3.85rem);
+  line-height:1;
+  font-weight:720;
+  letter-spacing:-.06em;
+  color:var(--blue);
+  margin:9px 0 12px;
+}
+.metric.green{color:var(--green)}
+.metric.amber{color:var(--amber)}
+.metric-label{font-weight:650;font-size:.93rem}
+.metric-note{margin-top:9px;color:var(--muted);font-size:.79rem}
+.evidence-note{
+  margin-top:20px;
+  padding:14px 17px;
+  border:1px solid rgba(198,106,0,.16);
+  background:#fff8ee;
+  color:#70450b;
+  border-radius:14px;
+  font-size:.82rem;
+}
+.selfsup{
+  display:grid;
+  grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:26px;
+  align-items:stretch;
+  margin-top:29px;
+}
+.big-zero{
+  min-height:305px;
+  border:1px solid rgba(36,138,61,.14);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 30% 25%,rgba(52,199,89,.10),transparent 46%),
+    rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+}
+.big-zero .zero{
+  font-size:7rem;
+  line-height:.8;
+  font-weight:720;
+  color:var(--green);
+  letter-spacing:-.08em;
+}
+.big-zero strong{font-size:1.12rem;margin-top:21px;font-weight:650}
+.checks{display:grid;gap:12px}
+.check{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:13px;
+  padding:17px 18px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.check b{
+  display:grid;
+  place-items:center;
+  width:28px;height:28px;
+  border-radius:9px;
+  background:rgba(52,199,89,.09);
+  color:var(--green);
+  font-weight:700;
+}
+.check p{color:var(--muted);font-size:.86rem}
+.timeline{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin-top:32px;
+}
+.phase{
+  position:relative;
+  padding:23px 21px 22px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.phase::after{
+  content:"";
+  position:absolute;
+  top:36px;
+  right:-17px;
+  width:17px;height:1px;
+  background:#c7c7cc;
+}
+.phase:last-child::after{display:none}
+.phase .week{
+  color:var(--blue);
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.10em;
+  font-weight:720;
+  margin-bottom:14px;
+}
+.phase p{color:var(--muted);font-size:.86rem}
+.deliverables{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:21px;
+  margin-top:29px;
+}
+.list-card{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.clean{list-style:none;display:grid;gap:13px}
+.clean li{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  color:var(--ink-soft);
+}
+.clean li::before{content:"✓";color:var(--green);font-weight:700}
+.screen{
+  min-height:315px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:linear-gradient(160deg,#ffffff,#f8f9fb);
+  box-shadow:var(--shadow);
+}
+.screen-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--line);
+  padding-bottom:12px;
+  margin-bottom:13px;
+}
+.screen-dots{display:flex;gap:6px}
+.screen-dots i{width:8px;height:8px;border-radius:50%;background:#d1d1d6}
+.screen-dots i:nth-child(1){background:#ff5f57}
+.screen-dots i:nth-child(2){background:#ffbd2e}
+.screen-dots i:nth-child(3){background:#28c840}
+.alert-row{
+  display:grid;
+  grid-template-columns:1fr 72px 58px;
+  gap:11px;
+  align-items:center;
+  padding:12px 9px;
+  border-bottom:1px solid rgba(29,29,31,.07);
+  font-size:.78rem;
+}
+.riskbar{
+  height:7px;
+  border-radius:10px;
+  background:#e8e8ed;
+  overflow:hidden;
+}
+.riskbar i{
+  display:block;
+  height:100%;
+  border-radius:10px;
+  background:linear-gradient(90deg,#0071e3,#5ac8fa);
+}
+.risk-high{color:var(--amber);font-weight:700}
+.risk-mid{color:var(--blue);font-weight:700}
+.data-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:19px;
+  margin-top:31px;
+}
+.data-box{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.data-box.optional{
+  border-color:rgba(36,138,61,.14);
+  background:#f7fcf8;
+}
+.data-label{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(0,113,227,.065);
+  color:var(--blue);
+  font-size:.68rem;
+  font-weight:720;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  margin-bottom:17px;
+}
+.data-box.optional .data-label{background:rgba(52,199,89,.09);color:var(--green)}
+.data-box ul{list-style:none;display:grid;gap:11px;color:var(--muted)}
+.data-box li::before{content:"•";color:var(--blue);margin-right:9px}
+.data-box.optional li::before{color:var(--green)}
+.success-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:17px;
+  margin-top:32px;
+}
+.success{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+  min-height:198px;
+}
+.success .metric{font-size:2.7rem}
+.success p{color:var(--muted)}
+.footer-controls{
+  position:fixed;
+  z-index:40;
+  left:0;right:0;bottom:0;
+  height:60px;
+  display:grid;
+  grid-template-columns:100px 1fr 100px;
+  align-items:center;
+  padding:0 28px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(180%) blur(22px);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+  border-top:1px solid var(--line);
+}
+.counter{color:var(--muted);font-size:.8rem}
+.progress{height:3px;background:#e5e5ea;border-radius:99px;overflow:hidden}
+.progress i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#0071e3,#5ac8fa);
+  transition:width .4s ease;
+}
+.nav-buttons{display:flex;justify-content:flex-end;gap:7px}
+.nav-buttons button{
+  width:36px;height:36px;
+  border-radius:50%;
+  color:var(--ink);
+  cursor:pointer;
+  background:#ffffff;
+  border:1px solid var(--line);
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+.nav-buttons button:hover{
+  border-color:rgba(0,113,227,.25);
+  color:var(--blue);
+  background:#f8fbff;
+}
+@media(max-width:980px){
+  .hero-grid,.selfsup,.deliverables{grid-template-columns:1fr}
+  .grid.four{grid-template-columns:repeat(2,1fr)}
+  .arch{grid-template-columns:1fr}
+  .arch-arrow{transform:rotate(90deg)}
+}
+@media(max-width:780px){
+  .slide{padding:76px 24px 86px;overflow:auto;align-items:flex-start}
+  .slide-inner{padding-bottom:20px}
+  .grid.two,.grid.three,.grid.four,.metric-grid,.timeline,.data-grid,.success-grid{grid-template-columns:1fr}
+  .problem-flow{grid-template-columns:1fr}
+  .flow-arrow{transform:rotate(90deg);text-align:center}
+  .phase::after{display:none}
+  h1{font-size:3.05rem}
+  .top-note{display:none}
+}
+@page{size:landscape;margin:0}
+@media print{
+  body{
+    overflow:visible;
+    background:#ffffff!important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .topbar,.footer-controls{display:none}
+  .deck{height:auto;overflow:visible}
+  .slide{
+    position:relative;
+    opacity:1;
+    pointer-events:auto;
+    transform:none;
+    min-height:100vh;
+    page-break-after:always;
+    padding:58px 64px;
+    background:#ffffff;
+  }
+  .slide:last-child{page-break-after:auto}
+  .card,.flow-card,.metric-card,.phase,.list-card,.screen,.data-box,.success,.hero-panel,.check,.big-zero,.arch-node{
+    box-shadow:none;
+  }
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">IPQ</span><span>Industrial predictive quality</span></div>
+  <div class="top-note">Vision · Sensors · Process · Alerts · 4–6 week technical pilot</div>
+</header>
+<main class="deck">
+
+        <section class="slide active"><div class="slide-inner hero-grid">
+          <div>
+            <div class="kicker">Industrial Predictive Quality</div>
+            <h1>From plant data to <span class="gradient">prioritized decisions</span></h1>
+            <p class="lead">Visual defect detection, machine-risk scoring and process-deviation alerts built from data the plant already produces.</p>
+            <div class="badges"><span class="badge">Industrial vision</span><span class="badge">Sensors & SCADA</span><span class="badge">Self-supervised learning</span><span class="badge">Local deployment</span></div>
+          </div>
+          <div class="hero-panel">
+            <div class="signal-stack">
+              <div class="signal"><div class="signal-icon">◫</div><div><strong>Visual inspection</strong><br><span>Heatmaps and part ranking</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">∿</div><div><strong>Machine risk</strong><br><span>Physical signals and context</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">↗</div><div><strong>Process deviation</strong><br><span>Expected vs observed evolution</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">◎</div><div><strong>Prioritization</strong><br><span>Patch → part → cycle → lot → line</span></div><i class="status"></i></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">The problem</div>
+          <h2>Signals appear <span class="gradient">before the cost</span></h2>
+          <p class="lead">The goal is not to generate more data or more alarms. It is to identify what changed, where it changed and what deserves attention first.</p>
+          <div class="problem-flow">
+            <div class="flow-card"><div class="num">01 · Signals</div><h3>Cameras, vibration, current, SCADA and test logs</h3><p class="small">Rich but fragmented information at different spatial and temporal scales.</p></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-card"><div class="num">02 · Hidden cost</div><h3>Late defects, scrap, micro-stops and reactive maintenance</h3><p class="small">Impact becomes visible when the intervention window is already small.</p></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-card"><div class="num">03 · Decision</div><h3>A prioritized, explainable and measurable queue</h3><p class="small">What to inspect, which asset to review and when the deviation started.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Modular offer</div>
+          <h2>Three modules, <span class="gradient">one decision system</span></h2>
+          <div class="grid three">
+            <article class="card module"><div><span class="module-tag">01 · Vision</span><div class="icon">◫</div><h3>Visual quality</h3><p>Learns normal production appearance and localizes deviations on each part.</p></div><ul><li>Defect heatmaps</li><li>Inspection ranking</li><li>Surface, PCB, packaging or product</li></ul></article>
+            <article class="card module green"><div><span class="module-tag">02 · Sensors</span><div class="icon">∿</div><h3>Machine risk</h3><p>Combines physical signals, process variables and calibrated models.</p></div><ul><li>Top assets/cycles</li><li>Lead time and false alarms</li><li>Engineered + learned features</li></ul></article>
+            <article class="card module amber"><div><span class="module-tag">03 · Process</span><div class="icon">↗</div><h3>Temporal deviation</h3><p>Compares expected process evolution with what is actually observed.</p></div><ul><li>Local surprise and persistence</li><li>Window- or cycle-level change</li><li>Lot- and line-level aggregation</li></ul></article>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Architecture</div>
+          <h2>From raw data to an <span class="gradient">actionable alert</span></h2>
+          <p class="lead">The system combines strong industrial baselines with self-supervised representation learning. Complexity is kept only when it adds measurable value.</p>
+          <div class="arch">
+            <div class="arch-node"><strong>Plant data</strong><span>Image, sensor, SCADA, recipe, asset</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Representation</strong><span>DINOv2, physical features, temporal tokens</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Models</strong><span>PatchCore, PaDiM, GBT, world model</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Decision</strong><span>Heatmap, risk, top-k, lead time</span></div>
+          </div>
+          <div class="grid three">
+            <div class="card"><h3>Baseline first</h3><p>Rules, physical features and classical models define the standard any advanced model must beat.</p></div>
+            <div class="card green"><h3>Self-supervision where useful</h3><p>Learns structure from large volumes of unlabeled images and process sequences.</p></div>
+            <div class="card amber"><h3>Operational hierarchy</h3><p>Local scores become risk by part, cycle, tool, lot, shift or production line.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Visual module</div>
+          <h2>Visual inspection that can start with <span class="gradient">normal images</span></h2>
+          <div class="grid two">
+            <div class="card emphasis">
+              <div class="icon">◫</div><h3>Dense features + normality memory</h3>
+              <p>DINOv2/ResNet extract local descriptors. PatchCore and PaDiM compare each region with normal history to localize deviations.</p>
+              <ul class="clean" style="margin-top:18px"><li>Image- or part-level score</li><li>Patch-level heatmap</li><li>Threshold calibrated on normal production</li><li>Ranking to reduce manual inspection</li></ul>
+            </div>
+            <div class="screen">
+              <div class="screen-top"><strong>Visual inspection queue</strong><div class="screen-dots"><i></i><i></i><i></i></div></div>
+              <div class="alert-row"><span>Part #A-1842</span><div class="riskbar"><i style="width:94%"></i></div><span class="risk-high">0.94</span></div>
+              <div class="alert-row"><span>Part #A-1837</span><div class="riskbar"><i style="width:81%"></i></div><span class="risk-high">0.81</span></div>
+              <div class="alert-row"><span>Part #A-1819</span><div class="riskbar"><i style="width:62%"></i></div><span class="risk-mid">0.62</span></div>
+              <div class="alert-row"><span>Part #A-1811</span><div class="riskbar"><i style="width:38%"></i></div><span class="risk-mid">0.38</span></div>
+              <p class="small" style="margin-top:17px">Pilot output: ranking, heatmap and comparison against normal references.</p>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Sensor and process module</div>
+          <h2>A learned signal that <span class="gradient">complements</span> process engineering</h2>
+          <p class="lead">The practical standard remains operational context + physical features. The token-level model is retained when it delivers a measurable incremental signal.</p>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="metric">0.6609</div><div class="metric-label">Metadata-only</div><div class="metric-note">Contextual AUPRC baseline in the current diagnostic.</div></div>
+            <div class="metric-card"><div class="metric green">0.6766</div><div class="metric-label">Metadata + EWMA surprise</div><div class="metric-note">Temporal surprise adds a small but positive signal.</div></div>
+            <div class="metric-card"><div class="metric amber">0.6960</div><div class="metric-label">Metadata + token world model</div><div class="metric-note">Best no-action combination; Δ AUPRC +0.0352.</div></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Why self-supervision matters</div>
+          <h2>Learn normal operation <span class="gradient">without waiting for defects</span></h2>
+          <div class="selfsup">
+            <div class="big-zero"><div class="zero">0</div><strong>Defect labels required to begin learning normality</strong><p class="small" style="margin-top:10px">For visual representation, anomaly detection and temporal deviation.</p></div>
+            <div class="checks">
+              <div class="check"><b>1</b><div><h3>Unlabeled data already has value</h3><p>Normal images, sensor sequences and production cycles can teach structure and expected evolution.</p></div></div>
+              <div class="check"><b>2</b><div><h3>Labels improve measurement; they are not a universal prerequisite</h3><p>Defects, scrap and failure events allow recall, lead-time and calibration analysis when available.</p></div></div>
+              <div class="check"><b>3</b><div><h3>Two valid outputs</h3><p>Without labels: anomaly and deviation. With historical events: supervised risk and economic validation.</p></div></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Technical evidence</div>
+          <h2>Results that justify <span class="gradient">validation on real plant data</span></h2>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="metric">1.00</div><div class="metric-label">Visual AUPRC</div><div class="metric-note">DINOv2 + PatchCore/PaDiM in a quick MVTec bottle run.</div></div>
+            <div class="metric-card"><div class="metric green">+0.0352</div><div class="metric-label">Sensor delta</div><div class="metric-note">Token world model over metadata-only in the current diagnostic.</div></div>
+            <div class="metric-card"><div class="metric amber">4–6</div><div class="metric-label">Weeks</div><div class="metric-note">To audit, benchmark, model and deliver a go/no-go recommendation.</div></div>
+          </div>
+          <div class="grid two">
+            <div class="card"><h3>What this supports</h3><p>The visual architecture produces a strong public-benchmark signal, and the dense sensor model adds incremental temporal information.</p></div>
+            <div class="card amber"><h3>What we do not assume</h3><p>A public result does not guarantee performance on another line. Value is confirmed on the client’s real distribution, defects and operating conditions.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Pilot</div>
+          <h2>A short path to an <span class="gradient">investment decision</span></h2>
+          <div class="timeline">
+            <div class="phase"><div class="week">Week 1</div><h3>Data map</h3><p>Inventory, quality, traceability, temporal structure and use-case definition.</p></div>
+            <div class="phase"><div class="week">Weeks 1–2</div><h3>Baselines</h3><p>Rules, classical models and a strong visual foundation to set a realistic reference.</p></div>
+            <div class="phase"><div class="week">Weeks 2–5</div><h3>Modeling</h3><p>Heatmaps, risk scoring, temporal surprise, calibration and error analysis.</p></div>
+            <div class="phase"><div class="week">Week 6</div><h3>Decision</h3><p>Local demo, final benchmark, expected impact and integration roadmap.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Deliverables</div>
+          <h2>A demonstration the team can <span class="gradient">see, measure and challenge</span></h2>
+          <div class="deliverables">
+            <div class="list-card"><ul class="clean"><li>Data manifest and quality audit.</li><li>Benchmark against rules and strong baselines.</li><li>Visual heatmaps and inspection ranking.</li><li>Asset/cycle risk and temporal deviation curves.</li><li>Operational metrics: precision@top-k, false alarms and lead time.</li><li>Local demo, executive report and technical documentation.</li><li>Go/no-go recommendation and integration architecture.</li></ul></div>
+            <div class="screen">
+              <div class="screen-top"><strong>Top operational alerts</strong><span class="small">local demo</span></div>
+              <div class="alert-row"><span>Line 2 · Lot 184</span><div class="riskbar"><i style="width:91%"></i></div><span class="risk-high">High</span></div>
+              <div class="alert-row"><span>Machine 04 · Cycle 912</span><div class="riskbar"><i style="width:77%"></i></div><span class="risk-high">High</span></div>
+              <div class="alert-row"><span>Part B-3381</span><div class="riskbar"><i style="width:64%"></i></div><span class="risk-mid">Review</span></div>
+              <div class="alert-row"><span>Night shift · Process 7</span><div class="riskbar"><i style="width:42%"></i></div><span class="risk-mid">Watch</span></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Starting data</div>
+          <h2>Start with what exists; <span class="gradient">labels are optional</span></h2>
+          <div class="data-grid">
+            <div class="data-box"><span class="data-label">Minimum to begin</span><ul><li>Normal images or process time series.</li><li>Timestamps, part/asset/cycle identifiers and temporal ordering.</li><li>Available operating context: recipe, material, setpoints or machine.</li><li>A technical owner who can interpret the process and its limits.</li></ul></div>
+            <div class="data-box optional"><span class="data-label">Increases value, but does not block the pilot</span><ul><li>Labeled defects or inspection outcomes.</li><li>Failure, scrap, rework or maintenance history.</li><li>Cost of false alarms and missed defects.</li><li>Verified temporal commands for action-conditioned evaluation.</li></ul></div>
+          </div>
+          <p class="small" style="margin-top:17px">Self-supervision learns normality without labels. Historical events are used when a specific supervised target must be measured or calibrated.</p>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Success criteria</div>
+          <h2>The pilot ends with a <span class="gradient">quantitative answer</span></h2>
+          <div class="success-grid">
+            <div class="success"><div class="metric">↓</div><h3>Less unnecessary inspection</h3><p>Focus manual review on the parts or cycles with the highest measured risk.</p></div>
+            <div class="success"><div class="metric green">↑</div><h3>Earlier warning</h3><p>Detect deviation before the defect, stoppage or reactive maintenance event.</p></div>
+            <div class="success"><div class="metric amber">✓</div><h3>Defensible go / no-go</h3><p>Decide whether to integrate, collect more data or stop without relying on black-box promises.</p></div>
+          </div>
+          <div class="card emphasis" style="margin-top:22px;text-align:center;min-height:auto"><h3 style="font-size:1.45rem">An industrial validation platform: strong baselines, AI where it adds value, and traceable results.</h3></div>
+        </div></section>
+        
+</main>
+<footer class="footer-controls">
+  <span class="counter" id="count">01 / 12</span>
+  <div class="progress"><i id="progressBar"></i></div>
+  <div class="nav-buttons"><button id="prev" aria-label="Previous slide">←</button><button id="next" aria-label="Next slide">→</button></div>
+</footer>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const count=document.getElementById('count');
+const bar=document.getElementById('progressBar');
+let index=0;
+function go(next){
+  index=Math.max(0,Math.min(slides.length-1,next));
+  slides.forEach((slide,i)=>slide.classList.toggle('active',i===index));
+  count.textContent=`${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
+  bar.style.width=`${((index+1)/slides.length)*100}%`;
+  history.replaceState(null,'',`#${index+1}`);
+}
+document.getElementById('prev').addEventListener('click',()=>go(index-1));
+document.getElementById('next').addEventListener('click',()=>go(index+1));
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(index+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(index-1)}
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(slides.length-1);
+});
+let touchStart=null;
+document.addEventListener('touchstart',e=>touchStart=e.changedTouches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  if(touchStart===null)return;
+  const dx=e.changedTouches[0].clientX-touchStart;
+  if(Math.abs(dx)>55)go(index+(dx<0?1:-1));
+  touchStart=null;
+},{passive:true});
+const hash=Math.max(1,parseInt(location.hash.slice(1)||'1',10));
+go(hash-1);
+</script>
+</body>
+</html>

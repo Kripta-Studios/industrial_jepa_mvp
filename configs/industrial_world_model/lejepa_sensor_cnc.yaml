@@ -1,0 +1,15 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_sensor
+dataset:
+  name: cnc_milling
+  root: data/raw/sensor/cnc_milling
+protocols:
+  - operational
+  - no_cycle
+  - hard_generalization
+loss:
+  lambda_sigreg: 0.05
+train:
+  epochs: 2
+output_dir: outputs/industrial_world_model/sensor_lejepa

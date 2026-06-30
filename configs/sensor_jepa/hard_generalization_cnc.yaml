@@ -1,0 +1,4 @@
+extends: configs/sensor_jepa/incremental_value_cnc.yaml
+hard_generalization:
+  output_dir: outputs/sensor_jepa/hard_generalization
+  estimator: logistic_regression

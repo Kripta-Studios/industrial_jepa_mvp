@@ -1,0 +1,61 @@
+# Python caches and test/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Local environments
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# Local datasets and generated data
+data/raw/
+data/interim/
+data/processed/
+
+# Experiment outputs, checkpoints, and derived model artifacts
+outputs/
+tmp/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npz
+*.pkl
+*.pickle
+*.joblib
+
+# Browser/runtime profiles accidentally created by demo tooling
+assets/edge-profile/
+
+# Local reference PDFs not needed in the repository history
+research_papers/*.pdf
+
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# Jupyter/editor/OS noise
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,87 @@
+seed: 42
+project: visual_jepa
+model_name: dense_visual_jepa
+device: auto
+
+dataset:
+  datasets:
+    - name: mvtec_ad
+      root: data/raw/visual/mvtec_ad
+      categories: [bottle]
+      train_split: train
+      normal_only: true
+      enabled: true
+    - name: visa
+      root: data/raw/visual/visa
+      categories: all
+      train_split: train
+      normal_only: true
+      enabled: false
+    - name: kolektor_sdd
+      root: data/raw/visual/kolektor_sdd
+      normal_only: true
+      enabled: false
+  image_size: 128
+  channels: 3
+  val_ratio: 0.15
+  max_train_images: 64
+  max_val_images: 16
+
+model:
+  encoder: vit_tiny
+  patch_size: 16
+  embedding_dim: 192
+  depth: 4
+  num_heads: 3
+  target_mode: ema
+  ema_momentum: 0.996
+  predictor: transformer
+  predictor_depth: 1
+  predictor_heads: 3
+
+masking:
+  mask_ratio: 0.6
+  num_target_blocks: 4
+  min_block_size: 1
+  max_block_size: 4
+  context_min_ratio: 0.25
+
+loss:
+  target_loss_weight: 1.0
+  visible_loss_weight: 0.5
+  deep_supervision_weight: 0.2
+  variance_weight: 0.05
+  covariance_weight: 0.0
+
+train:
+  epochs: 2
+  batch_size: 8
+  lr: 0.0003
+  weight_decay: 0.05
+  num_workers: 0
+  amp: true
+
+eval:
+  output_dir: outputs/visual_jepa/dense_pretrain_mvtec_bottle_quick
+
+features:
+  output_dir: outputs/visual_jepa/features
+
+memory:
+  output_dir: outputs/visual_jepa/memory_benchmark
+  coreset_ratio: 0.25
+  coreset_method: random
+  top_k: 5
+  max_memory_patches: 5000
+  image_threshold_quantile: 0.99
+  pixel_threshold_quantile: 0.995
+  save_heatmaps: 4
+
+padim:
+  output_dir: outputs/visual_jepa/padim_benchmark
+  n_features: 64
+  eps: 0.001
+  top_k: 5
+  image_threshold_quantile: 0.99
+  pixel_threshold_quantile: 0.995
+  save_heatmaps: 4

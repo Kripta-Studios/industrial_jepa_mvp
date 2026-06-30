@@ -1,0 +1,16 @@
+family,dataset,local_path,status,files_total,extensions
+sensor,cnc_milling,data/raw/sensor/cnc_milling,implemented,987,.csv:969;.jpg:16;.png:1;.xlsx:1
+sensor,cwru_bearing,data/raw/sensor/cwru_bearing,partial,111,.mat:111
+sensor,paderborn_bearing,data/raw/sensor/paderborn_bearing,partial,2624,.mat:2560;.pdf:64
+sensor,multi_sensor_cnc,data/raw/sensor/multi_sensor_cnc,missing,0,
+sensor,nasa_ims_bearing,data/raw/sensor/nasa_ims_bearing,missing,0,
+sensor,cmapss,data/raw/sensor/cmapss,missing,0,
+sensor,ai4i,data/raw/sensor/ai4i,missing,0,
+visual,mvtec_ad,data/raw/visual/mvtec_ad,implemented,6644,.png:6612;.txt:32
+visual,visa,data/raw/visual/visa,partial,12037,.csv:15;.jpg:10821;.png:1200;<none>:1
+visual,kolektor_sdd,data/raw/visual/kolektor_sdd,partial,798,.bmp:399;.jpg:399
+visual,mvtec_3d_ad,data/raw/visual/mvtec_3d_ad,missing,0,
+visual,neu_surface,data/raw/visual/neu_surface,missing,0,
+visual,dagm_2007,data/raw/visual/dagm_2007,missing,0,
+visual,severstal,data/raw/visual/severstal,missing,0,
+visual,wood_surface_defects,data/raw/visual/wood_surface_defects,missing,0,

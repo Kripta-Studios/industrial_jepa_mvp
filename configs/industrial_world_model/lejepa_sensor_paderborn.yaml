@@ -1,0 +1,9 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_sensor
+dataset:
+  name: paderborn_bearing
+  root: data/raw/sensor/paderborn_bearing
+loss:
+  lambda_sigreg: 0.05
+output_dir: outputs/industrial_world_model/sensor_lejepa_paderborn

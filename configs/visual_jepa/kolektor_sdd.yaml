@@ -1,0 +1,5 @@
+data:
+  dataset: kolektor_sdd
+  raw_root: data/raw/visual/kolektor_sdd
+  status: partial
+

@@ -1,0 +1,206 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.15cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\definecolor{evoblue}{HTML}{0071E3}
+\definecolor{evogreen}{HTML}{248A3D}
+\definecolor{evoamber}{HTML}{C66A00}
+\definecolor{evored}{HTML}{D70015}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\titleformat{\section}{\large\bfseries\color{evoblue}}{\thesection}{0.55em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.55em}{}
+\setlist[itemize]{leftmargin=1.2em,itemsep=0.25em}
+
+\title{\textbf{Industrial Predictive Quality MVP}\\Plain-English Sales Briefing for Audi and Industrial Manufacturers}
+\author{EVOCON Solutions}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\fbox{\begin{minipage}{0.92\linewidth}
+\textbf{One sentence:} EVOCON's Industrial Predictive Quality MVP helps factories find visual defects, machine-risk patterns and process deviations earlier by combining images, sensors and process data into a ranked inspection queue.
+\end{minipage}}
+\end{center}
+
+\section{Purpose of This Document}
+This document is written for a non-technical salesperson or executive who needs to explain the MVP in a factory meeting. It avoids academic language and focuses on what the customer cares about:
+\begin{itemize}
+  \item fewer late defects;
+  \item fewer unexpected machine problems;
+  \item less noise from alarms;
+  \item clearer inspection priorities;
+  \item a low-risk pilot that can prove or disprove value in 4--6 weeks.
+\end{itemize}
+
+\section{What Problem Are We Solving?}
+Modern factories already collect large amounts of data: camera images, sensor traces, PLC/SCADA values, torque curves, test logs, recipes, setpoints and maintenance events. The problem is that these signals are usually reviewed separately.
+
+The MVP turns these separate signals into one practical question:
+\begin{quote}
+\emph{Which part, cycle, machine, batch or line should the team review first?}
+\end{quote}
+
+For a premium automotive manufacturer such as Audi, the relevant pain points are surface quality, assembly quality, machine drift, supplier quality, line stoppages and late detection of anomalies.
+
+\section{Explain It Like I Am Five}
+Imagine an experienced quality engineer who sees thousands of good parts and machine cycles. Over time, the engineer develops a feeling for what normal production looks like.
+
+The MVP does something similar, but with data:
+\begin{enumerate}
+  \item it looks at images and sensor traces from normal production;
+  \item it learns what good production usually looks like;
+  \item it watches new production data;
+  \item it highlights what changed;
+  \item it ranks what should be checked first.
+\end{enumerate}
+
+It does not replace engineers. It gives engineers a better review queue.
+
+\section{The Product in Plain English}
+\begin{tabularx}{\linewidth}{@{}p{0.25\linewidth}Y@{}}
+\toprule
+\textbf{Module} & \textbf{What it does} \\
+\midrule
+Visual Quality & Looks at part or product images, marks suspicious areas with heatmaps and ranks images by review priority. \\
+Machine Risk & Uses vibration, current, temperature, torque, SCADA or test logs to score whether a machine/cycle is becoming risky. \\
+Process Deviation & Compares how a process should evolve with how it actually evolves, then marks the first point where it starts drifting. \\
+Hierarchical Ranking & Aggregates local evidence from patch to image, part, cycle, batch and line, so managers see useful priorities instead of raw signals. \\
+\bottomrule
+\end{tabularx}
+
+\section{Why This Fits Audi}
+Audi and Volkswagen Group plants have complex production systems with high quality expectations. The MVP is relevant wherever the plant has:
+\begin{itemize}
+  \item image-based inspection of parts, surfaces, welds, paint, connectors or assemblies;
+  \item torque, vibration, current, temperature or test-log traces;
+  \item station-level or line-level quality events;
+  \item process settings such as recipe, speed, force, pressure, temperature, material, tool or robot program;
+  \item a need to reduce manual review burden or identify the first warning signs of drift.
+\end{itemize}
+
+\section{Suggested First Audi Use Cases}
+\begin{tabularx}{\linewidth}{@{}p{0.28\linewidth}Y Y@{}}
+\toprule
+\textbf{Use case} & \textbf{Data needed} & \textbf{Output} \\
+\midrule
+Body / paint / surface inspection & Images from good and questionable parts, station ID, inspection results & Heatmap and part review ranking \\
+Assembly station risk & Torque curves, press-fit traces, robot/PLC events, station ID & Top risky cycles and deviation timeline \\
+Tool or machine drift & Vibration/current/temperature, maintenance events, process context & Machine risk score and early-warning ranking \\
+Supplier quality & Incoming-part images, batch/supplier metadata, inspection labels & Batch and supplier review prioritisation \\
+End-of-line test anomaly & Test logs, final pass/fail labels, process context & Test anomaly score and root-candidate ranking \\
+\bottomrule
+\end{tabularx}
+
+\section{What Results Can We Honestly Show?}
+Current internal MVP results support selling a pilot, not a production guarantee.
+
+\begin{tabularx}{\linewidth}{@{}p{0.30\linewidth}p{0.22\linewidth}Y@{}}
+\toprule
+\textbf{Area} & \textbf{Current evidence} & \textbf{Commercial meaning} \\
+\midrule
+Visual anomaly detection & DINOv2/ResNet + PatchCore/PaDiM achieved near-perfect quick-run scores on MVTec bottle. & Visual inspection is the strongest first product module to pilot. \\
+Sensor failure-soon risk & Engineered sensor features are strong; future learned signal is promising but not a replacement. & Start with reliable physical indicators, then add learned signals if they improve validation. \\
+No-cycle sensor evidence & Sensor and latent signals help when lifecycle/cycle proxies are removed. & Useful when simple counters do not explain risk. \\
+Hardness/material generalization & Sensor features were strong in held-out hardness/material-style splits. & Physical signals can matter when process regime changes. \\
+\bottomrule
+\end{tabularx}
+
+\section{What Not To Claim}
+Do not say:
+\begin{itemize}
+  \item ``This is production-ready tomorrow.''
+  \item ``This replaces quality engineers.''
+  \item ``The model guarantees zero defects.''
+  \item ``The research model always beats engineered features.''
+  \item ``We have already deployed this at Audi.''
+\end{itemize}
+
+Say instead:
+\begin{quote}
+``We have a pilot-ready MVP. We can take one process, compare against strong baselines and show in 4--6 weeks whether images, sensors and process data can detect defects or drift earlier than current checks.''
+\end{quote}
+
+\section{The Recommended Meeting Script}
+\subsection*{Opening}
+``EVOCON already works in industrial automation and project support. This MVP adds an AI layer for predictive quality: it combines camera inspection, sensor trends and process context to produce a ranked review queue. We are not asking you to replace your systems. We propose a 4--6 week pilot on one line to measure whether we can catch defects or machine drift earlier.''
+
+\subsection*{First Question}
+``Where do you currently detect quality or machine issues too late?''
+
+\subsection*{If They Mention Visual Quality}
+``Then the first pilot should be visual: part images in, heatmaps and inspection ranking out. We compare against simple rules and strong visual baselines.''
+
+\subsection*{If They Mention Machine Downtime}
+``Then the first pilot should use sensor/process data: vibration, current, temperature, torque, SCADA or test logs. We rank cycles or machines by risk and measure lead time and false alarms.''
+
+\subsection*{If They Mention Too Many Alarms}
+``Then the first pilot should focus on prioritisation: the top 5--10\% alerts that deserve human review, with evidence for why they were selected.''
+
+\section{What Data To Ask For}
+\begin{tabularx}{\linewidth}{@{}p{0.28\linewidth}Y@{}}
+\toprule
+\textbf{Minimum} & 100--1,000 historical images or sensor windows from one process, with timestamps and any known quality/failure labels. \\
+\midrule
+\textbf{Better} & Images + sensor traces + process settings + station IDs + inspection results + maintenance/quality events. \\
+\midrule
+\textbf{Best} & A full sequence: part/cycle ID, timestamp, station, line, recipe/setpoint, image, sensor trace, inspection result and downstream event. \\
+\bottomrule
+\end{tabularx}
+
+\section{4--6 Week Pilot Plan}
+\begin{tabularx}{\linewidth}{@{}p{0.18\linewidth}Y@{}}
+\toprule
+\textbf{Week} & \textbf{Work} \\
+\midrule
+1 & Data audit, target definition and baseline agreement. \\
+2 & Build simple baselines and visual/sensor foundation models. \\
+3--4 & Train/evaluate risk ranking, heatmaps, deviation timelines and calibration. \\
+5 & Review with plant experts; collect false positives, missed cases and practical constraints. \\
+6 & Deliver executive report, local demo, metrics, go/no-go recommendation and integration roadmap. \\
+\bottomrule
+\end{tabularx}
+
+\section{What EVOCON Should Send Before the Meeting}
+\begin{itemize}
+  \item The ELI5 HTML/PDF deck: \texttt{audi\_industrial\_predictive\_quality\_eli5\_en.html/pdf}.
+  \item The algorithm animation: \texttt{assets/industrial\_predictive\_quality\_algorithm\_demo.html}.
+  \item A short email, not the full technical paper.
+  \item Offer a 15-minute qualification call before asking for data.
+\end{itemize}
+
+\section{Short Email Template}
+\begin{quote}
+Subject: 4--6 week pilot for earlier quality and machine-risk detection
+
+Hello [Name],
+
+EVOCON Solutions works in industrial automation and project support. We are preparing a pilot-ready Industrial Predictive Quality MVP for automotive manufacturing: it combines camera inspection, sensor trends and process context to produce heatmaps, risk scores and a ranked review queue.
+
+The proposal is deliberately narrow: choose one line/process, use historical images or sensor/test data, compare against strong baselines and deliver a go/no-go report in 4--6 weeks.
+
+Would it make sense to have a 15-minute call to identify one quality or machine-risk case where late detection is costly?
+
+Best regards,
+[Sender]
+\end{quote}
+
+\section{Final Positioning}
+The strongest commercial message is:
+\begin{quote}
+\textbf{We turn existing factory data into earlier warnings and clearer actions.}
+\end{quote}
+
+The safest commercial ask is:
+\begin{quote}
+\textbf{Let us validate one process in a 4--6 week pilot.}
+\end{quote}
+
+\end{document}

@@ -1,0 +1,59 @@
+project: sensor_jepa
+model_name: dense_sensor_jepa
+seed: 42
+device: auto
+data:
+  dataset: cnc_milling
+  raw_root: data/raw/sensor/cnc_milling
+  processed_path: data/processed/sensor_cnc_windows.npz
+  manifest_path: data/manifests/cnc_windows.csv
+  window_length: 8
+  stride: 1
+  split_by: tool
+  val_fraction: 0.15
+  test_fraction: 0.20
+world_model:
+  forecast_horizon: 3
+  failure_horizon_cycles: 10
+tokenization:
+  temporal_patch_size: 2
+  temporal_patch_stride: 1
+  mode: multichannel_token
+model:
+  encoder: temporal_transformer
+  embedding_dim: 96
+  depth: 2
+  num_heads: 3
+  target_mode: ema
+  ema_momentum: 0.996
+  predictor: transformer
+  predictor_depth: 1
+  predictor_hidden_dim: 192
+masking:
+  temporal_mask_ratio: 0.4
+  num_target_spans: 2
+  min_span: 1
+  max_span: 3
+  schedule:
+    enabled: true
+    initial_mask_ratio: 0.15
+    initial_max_span: 1
+loss:
+  target_loss_weight: 1.0
+  visible_loss_weight: 0.5
+  future_loss_weight: 0.5
+  variance_weight: 0.05
+  covariance_weight: 0.0
+  sigreg_weight: 0.05
+  sigreg_num_projections: 128
+train:
+  epochs: 2
+  batch_size: 64
+  lr: 0.0003
+  weight_decay: 0.01
+eval:
+  output_dir: outputs/sensor_jepa/dense_sensor_jepa_cnc
+  checkpoint: outputs/sensor_jepa/dense_sensor_jepa_cnc/checkpoints/latest.pt
+  targets: [5, 10, 20]
+token_world_model:
+  output_dir: outputs/sensor_jepa/token_world_model

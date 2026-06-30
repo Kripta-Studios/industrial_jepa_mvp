@@ -1,0 +1,5 @@
+data:
+  dataset: multi_sensor_cnc
+  raw_root: data/raw/sensor/multi_sensor_cnc
+  status: pending
+

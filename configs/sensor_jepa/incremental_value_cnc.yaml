@@ -1,0 +1,44 @@
+project: sensor_jepa
+seed: 42
+device: auto
+data:
+  dataset: cnc_milling
+  raw_root: data/raw/sensor/cnc_milling
+  processed_path: data/processed/sensor_cnc_windows.npz
+  manifest_path: data/manifests/cnc_windows.csv
+  window_length: 8
+  stride: 1
+  split_by: tool
+  val_fraction: 0.15
+  test_fraction: 0.20
+model:
+  encoder: conv1d
+  input_channels: auto
+  embedding_dim: 128
+  hidden_dim: 128
+  predictor_hidden_dim: 256
+  temporal_mask_ratio: 0.4
+  channel_mask_ratio: 0.15
+  sigreg_weight: 0.05
+training:
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.0001
+world_model:
+  epochs: 2
+  forecast_horizon: 3
+  failure_horizon_cycles: 10
+  learning_rate: 0.001
+  sigreg_weight: 0.05
+incremental_benchmark:
+  output_dir: outputs/sensor_jepa/incremental_value_benchmark
+  seeds: [42]
+  horizons: [3]
+  targets: [10]
+  protocols: [operational, no_cycle, sensor_only, metadata_only]
+  core_estimator: logistic_regression
+  include_world_model: true
+  world_model_epochs: 2
+  include_gbt_feature_value: true
+  gbt_estimators: [hist_gradient_boosting, xgboost, lightgbm]
+  permutation_importance: false

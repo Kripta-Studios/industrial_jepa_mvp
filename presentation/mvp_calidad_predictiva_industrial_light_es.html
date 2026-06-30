@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>MVP de Calidad Predictiva Industrial</title>
+<style>
+
+:root{
+  --bg:#f5f5f7;
+  --surface:#ffffff;
+  --surface-soft:#fbfbfd;
+  --surface-blue:#f2f7ff;
+  --ink:#1d1d1f;
+  --ink-soft:#3a3a3c;
+  --muted:#6e6e73;
+  --line:rgba(29,29,31,.10);
+  --line-strong:rgba(29,29,31,.16);
+  --blue:#0071e3;
+  --blue-dark:#0057b8;
+  --green:#248a3d;
+  --amber:#c66a00;
+  --red:#d70015;
+  --shadow:0 16px 50px rgba(0,0,0,.07);
+  --shadow-soft:0 8px 28px rgba(0,0,0,.055);
+  --radius-xl:30px;
+  --radius-lg:22px;
+  --radius-md:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%}
+body{
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 18% 4%,rgba(0,113,227,.07),transparent 28%),
+    radial-gradient(circle at 86% 88%,rgba(52,199,89,.055),transparent 30%),
+    var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  font-synthesis:none;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.45;
+}
+button{font:inherit}
+.deck{height:100vh;position:relative;overflow:hidden}
+.slide{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  padding:82px clamp(34px,6vw,94px) 86px;
+  opacity:0;
+  pointer-events:none;
+  transform:translate3d(44px,0,0) scale(.992);
+  transition:opacity .34s ease,transform .48s cubic-bezier(.2,.8,.2,1);
+}
+.slide::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 18%,rgba(0,113,227,.055),transparent 24%),
+    linear-gradient(to bottom,rgba(255,255,255,.40),rgba(255,255,255,0));
+}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide-inner{position:relative;z-index:1;width:min(1180px,100%);margin:0 auto}
+.topbar{
+  position:fixed;
+  z-index:30;
+  left:0;right:0;top:0;
+  height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.78);
+  backdrop-filter:saturate(180%) blur(22px);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+}
+.brand{display:flex;align-items:center;gap:11px;font-weight:650;letter-spacing:-.015em}
+.brand-mark{
+  width:30px;height:30px;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  color:white;
+  background:linear-gradient(145deg,#2f80ed,#0057b8);
+  font-size:.68rem;
+  font-weight:800;
+  box-shadow:0 5px 16px rgba(0,113,227,.20);
+}
+.top-note{color:var(--muted);font-size:.82rem}
+.kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--blue);
+  font-size:.72rem;
+  font-weight:720;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+.kicker::before{
+  content:"";
+  width:24px;height:1px;
+  background:var(--blue);
+}
+h1{
+  max-width:1040px;
+  font-size:clamp(3.2rem,6.5vw,6.25rem);
+  line-height:.96;
+  letter-spacing:-.068em;
+  font-weight:700;
+  margin-bottom:24px;
+}
+h1 .gradient,h2 .gradient{
+  background:linear-gradient(95deg,#1d1d1f 0%,#0068d9 58%,#37a4ff 100%);
+  color:transparent;
+  background-clip:text;
+  -webkit-background-clip:text;
+}
+h2{
+  max-width:1000px;
+  font-size:clamp(2.3rem,4.5vw,4.45rem);
+  line-height:1.03;
+  letter-spacing:-.055em;
+  font-weight:680;
+  margin-bottom:18px;
+}
+h3{
+  font-size:1.1rem;
+  line-height:1.25;
+  font-weight:650;
+  letter-spacing:-.018em;
+  margin-bottom:8px;
+}
+.lead{
+  max-width:920px;
+  color:var(--ink-soft);
+  font-size:clamp(1.08rem,1.75vw,1.38rem);
+  line-height:1.56;
+}
+.small{font-size:.87rem;color:var(--muted)}
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.36fr) minmax(330px,.64fr);
+  gap:50px;
+  align-items:center;
+}
+.hero-panel{
+  border:1px solid var(--line);
+  border-radius:var(--radius-xl);
+  padding:27px;
+  background:rgba(255,255,255,.88);
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.hero-panel::after{
+  content:"";
+  position:absolute;
+  width:220px;height:220px;
+  border-radius:50%;
+  right:-92px;top:-105px;
+  background:radial-gradient(circle,rgba(0,113,227,.12),transparent 70%);
+}
+.badges{display:flex;gap:9px;flex-wrap:wrap;margin-top:30px}
+.badge{
+  padding:8px 12px;
+  border:1px solid rgba(0,113,227,.12);
+  background:rgba(0,113,227,.055);
+  border-radius:999px;
+  color:var(--blue-dark);
+  font-size:.75rem;
+  font-weight:620;
+}
+.signal-stack{display:grid;gap:11px}
+.signal{
+  display:grid;
+  grid-template-columns:42px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--surface-soft);
+}
+.signal-icon,.icon{
+  width:42px;height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  background:linear-gradient(145deg,#eef5ff,#f8fbff);
+  color:var(--blue);
+  border:1px solid rgba(0,113,227,.08);
+  font-size:1.1rem;
+  font-weight:800;
+}
+.signal strong{font-size:.91rem;font-weight:650}
+.signal span{font-size:.76rem;color:var(--muted)}
+.status{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:#30d158;
+  box-shadow:0 0 0 4px rgba(48,209,88,.11);
+}
+.grid{display:grid;gap:17px;margin-top:29px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{
+  position:relative;
+  overflow:hidden;
+  min-height:150px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+}
+.card::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,#0071e3,#55aaff);
+  opacity:.75;
+}
+.card p,.card li{color:var(--muted)}
+.card .icon{margin-bottom:17px}
+.card.emphasis{background:linear-gradient(145deg,#ffffff,#f6f9fd)}
+.card.green::before{background:#34c759}
+.card.amber::before{background:#ff9f0a}
+.card.red::before{background:#ff453a}
+.problem-flow{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr;
+  gap:16px;
+  align-items:center;
+  margin-top:36px;
+}
+.flow-card{
+  min-height:184px;
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+}
+.flow-arrow{font-size:1.75rem;color:#8e8e93;font-weight:600}
+.flow-card .num{
+  font-size:.7rem;
+  color:var(--blue);
+  font-weight:720;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.module{
+  min-height:260px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.module .module-tag{
+  display:inline-flex;
+  align-self:flex-start;
+  padding:6px 9px;
+  border-radius:999px;
+  color:var(--blue);
+  background:rgba(0,113,227,.065);
+  font-size:.67rem;
+  font-weight:720;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+}
+.module ul{list-style:none;display:grid;gap:8px;margin-top:17px}
+.module li::before{content:"•";color:var(--blue);font-weight:900;margin-right:9px}
+.card.green .module-tag{color:var(--green);background:rgba(52,199,89,.08)}
+.card.green li::before{color:var(--green)}
+.card.amber .module-tag{color:var(--amber);background:rgba(255,159,10,.08)}
+.card.amber li::before{color:var(--amber)}
+.arch{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:10px;
+  align-items:center;
+  margin-top:35px;
+}
+.arch-node{
+  min-height:120px;
+  padding:17px 14px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(255,255,255,.92);
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.arch-node strong{font-size:.88rem;color:var(--ink)}
+.arch-node span{font-size:.74rem;color:var(--muted);margin-top:6px}
+.arch-arrow{text-align:center;color:#8e8e93;font-size:1.2rem;font-weight:600}
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  margin-top:31px;
+}
+.metric-card{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.metric{
+  font-size:clamp(2.2rem,4vw,3.85rem);
+  line-height:1;
+  font-weight:720;
+  letter-spacing:-.06em;
+  color:var(--blue);
+  margin:9px 0 12px;
+}
+.metric.green{color:var(--green)}
+.metric.amber{color:var(--amber)}
+.metric-label{font-weight:650;font-size:.93rem}
+.metric-note{margin-top:9px;color:var(--muted);font-size:.79rem}
+.evidence-note{
+  margin-top:20px;
+  padding:14px 17px;
+  border:1px solid rgba(198,106,0,.16);
+  background:#fff8ee;
+  color:#70450b;
+  border-radius:14px;
+  font-size:.82rem;
+}
+.selfsup{
+  display:grid;
+  grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
+  gap:26px;
+  align-items:stretch;
+  margin-top:29px;
+}
+.big-zero{
+  min-height:305px;
+  border:1px solid rgba(36,138,61,.14);
+  border-radius:26px;
+  background:
+    radial-gradient(circle at 30% 25%,rgba(52,199,89,.10),transparent 46%),
+    rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+}
+.big-zero .zero{
+  font-size:7rem;
+  line-height:.8;
+  font-weight:720;
+  color:var(--green);
+  letter-spacing:-.08em;
+}
+.big-zero strong{font-size:1.12rem;margin-top:21px;font-weight:650}
+.checks{display:grid;gap:12px}
+.check{
+  display:grid;
+  grid-template-columns:32px 1fr;
+  gap:13px;
+  padding:17px 18px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.check b{
+  display:grid;
+  place-items:center;
+  width:28px;height:28px;
+  border-radius:9px;
+  background:rgba(52,199,89,.09);
+  color:var(--green);
+  font-weight:700;
+}
+.check p{color:var(--muted);font-size:.86rem}
+.timeline{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  margin-top:32px;
+}
+.phase{
+  position:relative;
+  padding:23px 21px 22px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.phase::after{
+  content:"";
+  position:absolute;
+  top:36px;
+  right:-17px;
+  width:17px;height:1px;
+  background:#c7c7cc;
+}
+.phase:last-child::after{display:none}
+.phase .week{
+  color:var(--blue);
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.10em;
+  font-weight:720;
+  margin-bottom:14px;
+}
+.phase p{color:var(--muted);font-size:.86rem}
+.deliverables{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:21px;
+  margin-top:29px;
+}
+.list-card{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.clean{list-style:none;display:grid;gap:13px}
+.clean li{
+  display:grid;
+  grid-template-columns:24px 1fr;
+  gap:10px;
+  color:var(--ink-soft);
+}
+.clean li::before{content:"✓";color:var(--green);font-weight:700}
+.screen{
+  min-height:315px;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:linear-gradient(160deg,#ffffff,#f8f9fb);
+  box-shadow:var(--shadow);
+}
+.screen-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--line);
+  padding-bottom:12px;
+  margin-bottom:13px;
+}
+.screen-dots{display:flex;gap:6px}
+.screen-dots i{width:8px;height:8px;border-radius:50%;background:#d1d1d6}
+.screen-dots i:nth-child(1){background:#ff5f57}
+.screen-dots i:nth-child(2){background:#ffbd2e}
+.screen-dots i:nth-child(3){background:#28c840}
+.alert-row{
+  display:grid;
+  grid-template-columns:1fr 72px 58px;
+  gap:11px;
+  align-items:center;
+  padding:12px 9px;
+  border-bottom:1px solid rgba(29,29,31,.07);
+  font-size:.78rem;
+}
+.riskbar{
+  height:7px;
+  border-radius:10px;
+  background:#e8e8ed;
+  overflow:hidden;
+}
+.riskbar i{
+  display:block;
+  height:100%;
+  border-radius:10px;
+  background:linear-gradient(90deg,#0071e3,#5ac8fa);
+}
+.risk-high{color:var(--amber);font-weight:700}
+.risk-mid{color:var(--blue);font-weight:700}
+.data-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:19px;
+  margin-top:31px;
+}
+.data-box{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+}
+.data-box.optional{
+  border-color:rgba(36,138,61,.14);
+  background:#f7fcf8;
+}
+.data-label{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(0,113,227,.065);
+  color:var(--blue);
+  font-size:.68rem;
+  font-weight:720;
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  margin-bottom:17px;
+}
+.data-box.optional .data-label{background:rgba(52,199,89,.09);color:var(--green)}
+.data-box ul{list-style:none;display:grid;gap:11px;color:var(--muted)}
+.data-box li::before{content:"•";color:var(--blue);margin-right:9px}
+.data-box.optional li::before{color:var(--green)}
+.success-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:17px;
+  margin-top:32px;
+}
+.success{
+  padding:25px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  background:rgba(255,255,255,.94);
+  box-shadow:var(--shadow-soft);
+  min-height:198px;
+}
+.success .metric{font-size:2.7rem}
+.success p{color:var(--muted)}
+.footer-controls{
+  position:fixed;
+  z-index:40;
+  left:0;right:0;bottom:0;
+  height:60px;
+  display:grid;
+  grid-template-columns:100px 1fr 100px;
+  align-items:center;
+  padding:0 28px;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:saturate(180%) blur(22px);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+  border-top:1px solid var(--line);
+}
+.counter{color:var(--muted);font-size:.8rem}
+.progress{height:3px;background:#e5e5ea;border-radius:99px;overflow:hidden}
+.progress i{
+  display:block;
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#0071e3,#5ac8fa);
+  transition:width .4s ease;
+}
+.nav-buttons{display:flex;justify-content:flex-end;gap:7px}
+.nav-buttons button{
+  width:36px;height:36px;
+  border-radius:50%;
+  color:var(--ink);
+  cursor:pointer;
+  background:#ffffff;
+  border:1px solid var(--line);
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+.nav-buttons button:hover{
+  border-color:rgba(0,113,227,.25);
+  color:var(--blue);
+  background:#f8fbff;
+}
+@media(max-width:980px){
+  .hero-grid,.selfsup,.deliverables{grid-template-columns:1fr}
+  .grid.four{grid-template-columns:repeat(2,1fr)}
+  .arch{grid-template-columns:1fr}
+  .arch-arrow{transform:rotate(90deg)}
+}
+@media(max-width:780px){
+  .slide{padding:76px 24px 86px;overflow:auto;align-items:flex-start}
+  .slide-inner{padding-bottom:20px}
+  .grid.two,.grid.three,.grid.four,.metric-grid,.timeline,.data-grid,.success-grid{grid-template-columns:1fr}
+  .problem-flow{grid-template-columns:1fr}
+  .flow-arrow{transform:rotate(90deg);text-align:center}
+  .phase::after{display:none}
+  h1{font-size:3.05rem}
+  .top-note{display:none}
+}
+@page{size:landscape;margin:0}
+@media print{
+  body{
+    overflow:visible;
+    background:#ffffff!important;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  .topbar,.footer-controls{display:none}
+  .deck{height:auto;overflow:visible}
+  .slide{
+    position:relative;
+    opacity:1;
+    pointer-events:auto;
+    transform:none;
+    min-height:100vh;
+    page-break-after:always;
+    padding:58px 64px;
+    background:#ffffff;
+  }
+  .slide:last-child{page-break-after:auto}
+  .card,.flow-card,.metric-card,.phase,.list-card,.screen,.data-box,.success,.hero-panel,.check,.big-zero,.arch-node{
+    box-shadow:none;
+  }
+}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">IPQ</span><span>Calidad predictiva industrial</span></div>
+  <div class="top-note">Visión · Sensores · Proceso · Alertas · Piloto técnico de 4–6 semanas</div>
+</header>
+<main class="deck">
+
+        <section class="slide active"><div class="slide-inner hero-grid">
+          <div>
+            <div class="kicker">Industrial Predictive Quality</div>
+            <h1>De los datos de planta a <span class="gradient">decisiones priorizadas</span></h1>
+            <p class="lead">Detección visual de defectos, scoring de riesgo y alertas de desviación del proceso con los datos que la planta ya genera.</p>
+            <div class="badges"><span class="badge">Visión industrial</span><span class="badge">Sensores y SCADA</span><span class="badge">Aprendizaje autosupervisado</span><span class="badge">Despliegue local</span></div>
+          </div>
+          <div class="hero-panel">
+            <div class="signal-stack">
+              <div class="signal"><div class="signal-icon">◫</div><div><strong>Inspección visual</strong><br><span>Heatmaps y ranking por pieza</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">∿</div><div><strong>Riesgo de máquina</strong><br><span>Señales físicas y contexto</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">↗</div><div><strong>Desviación de proceso</strong><br><span>Evolución esperada vs observada</span></div><i class="status"></i></div>
+              <div class="signal"><div class="signal-icon">◎</div><div><strong>Priorización</strong><br><span>Pieza → ciclo → lote → línea</span></div><i class="status"></i></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">El problema</div>
+          <h2>Las señales aparecen <span class="gradient">antes que el coste</span></h2>
+          <p class="lead">El reto no es generar más datos ni más alarmas. Es detectar qué cambio importa, dónde aparece y qué merece atención primero.</p>
+          <div class="problem-flow">
+            <div class="flow-card"><div class="num">01 · Señales</div><h3>Cámaras, vibración, corriente, SCADA y test logs</h3><p class="small">Información rica, dispersa y con escalas temporales distintas.</p></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-card"><div class="num">02 · Coste oculto</div><h3>Defectos tardíos, scrap, microparadas y mantenimiento reactivo</h3><p class="small">El impacto aparece cuando la ventana de actuación ya es pequeña.</p></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-card"><div class="num">03 · Decisión</div><h3>Una lista priorizada, explicable y medible</h3><p class="small">Qué inspeccionar, qué activo revisar y cuándo se inició la desviación.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Oferta modular</div>
+          <h2>Tres módulos, <span class="gradient">un mismo sistema de decisión</span></h2>
+          <div class="grid three">
+            <article class="card module"><div><span class="module-tag">01 · Visión</span><div class="icon">◫</div><h3>Calidad visual</h3><p>Aprende el aspecto normal de la producción y localiza desviaciones sobre la pieza.</p></div><ul><li>Heatmaps por defecto</li><li>Ranking de inspección</li><li>Superficie, PCB, envase o producto</li></ul></article>
+            <article class="card module green"><div><span class="module-tag">02 · Sensor</span><div class="icon">∿</div><h3>Riesgo de máquina</h3><p>Combina señales físicas, variables de proceso y modelos calibrados.</p></div><ul><li>Top de activos/ciclos</li><li>Lead time y falsas alarmas</li><li>Features engineered + señal aprendida</li></ul></article>
+            <article class="card module amber"><div><span class="module-tag">03 · Proceso</span><div class="icon">↗</div><h3>Desviación temporal</h3><p>Compara la evolución esperada del proceso con la evolución realmente observada.</p></div><ul><li>Sorpresa local y persistencia</li><li>Cambio por ventana o ciclo</li><li>Agregación a lote y línea</li></ul></article>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Arquitectura</div>
+          <h2>Del dato bruto a una <span class="gradient">alerta accionable</span></h2>
+          <p class="lead">El sistema combina baselines industriales fuertes con representación autosupervisada. La complejidad solo se conserva cuando aporta valor medible.</p>
+          <div class="arch">
+            <div class="arch-node"><strong>Datos de planta</strong><span>Imagen, sensor, SCADA, receta, activo</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Representación</strong><span>DINOv2, señal física, tokens temporales</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Modelos</strong><span>PatchCore, PaDiM, GBT, world model</span></div><div class="arch-arrow">→</div>
+            <div class="arch-node"><strong>Decisión</strong><span>Heatmap, riesgo, top-k, lead time</span></div>
+          </div>
+          <div class="grid three">
+            <div class="card"><h3>Baseline primero</h3><p>Reglas, features físicas y modelos clásicos establecen el nivel que cualquier modelo avanzado debe superar.</p></div>
+            <div class="card green"><h3>Autosupervisión donde aporta</h3><p>Aprende estructura de imágenes y secuencias con grandes volúmenes de datos no etiquetados.</p></div>
+            <div class="card amber"><h3>Jerarquía operativa</h3><p>El score local se transforma en riesgo por pieza, ciclo, herramienta, lote, turno o línea.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Módulo visual</div>
+          <h2>Inspección visual que puede empezar con <span class="gradient">imágenes normales</span></h2>
+          <div class="grid two">
+            <div class="card emphasis">
+              <div class="icon">◫</div><h3>Dense features + memoria de normalidad</h3>
+              <p>DINOv2/ResNet extraen descriptores locales. PatchCore y PaDiM comparan cada región con el histórico normal para localizar desviaciones.</p>
+              <ul class="clean" style="margin-top:18px"><li>Score por imagen o pieza</li><li>Mapa de calor a nivel de patch</li><li>Umbral calibrado con producción normal</li><li>Ranking para reducir inspección manual</li></ul>
+            </div>
+            <div class="screen">
+              <div class="screen-top"><strong>Visual inspection queue</strong><div class="screen-dots"><i></i><i></i><i></i></div></div>
+              <div class="alert-row"><span>Pieza #A-1842</span><div class="riskbar"><i style="width:94%"></i></div><span class="risk-high">0.94</span></div>
+              <div class="alert-row"><span>Pieza #A-1837</span><div class="riskbar"><i style="width:81%"></i></div><span class="risk-high">0.81</span></div>
+              <div class="alert-row"><span>Pieza #A-1819</span><div class="riskbar"><i style="width:62%"></i></div><span class="risk-mid">0.62</span></div>
+              <div class="alert-row"><span>Pieza #A-1811</span><div class="riskbar"><i style="width:38%"></i></div><span class="risk-mid">0.38</span></div>
+              <p class="small" style="margin-top:17px">Salida del piloto: ranking, heatmap y comparación con referencias normales.</p>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Módulo sensor y proceso</div>
+          <h2>Una señal aprendida que <span class="gradient">complementa</span> la ingeniería de proceso</h2>
+          <p class="lead">El estándar práctico sigue siendo contexto operativo + features físicas. El modelo token-level añade información temporal cuando demuestra un delta real.</p>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="metric">0.6609</div><div class="metric-label">Metadata-only</div><div class="metric-note">AUPRC del baseline contextual en el diagnóstico actual.</div></div>
+            <div class="metric-card"><div class="metric green">0.6766</div><div class="metric-label">Metadata + EWMA surprise</div><div class="metric-note">La sorpresa temporal añade una señal pequeña pero positiva.</div></div>
+            <div class="metric-card"><div class="metric amber">0.6960</div><div class="metric-label">Metadata + token world model</div><div class="metric-note">Mejor combinación no-action; Δ AUPRC +0.0352.</div></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Ventaja de la autosupervisión</div>
+          <h2>Aprender el proceso normal <span class="gradient">sin esperar a acumular defectos</span></h2>
+          <div class="selfsup">
+            <div class="big-zero"><div class="zero">0</div><strong>Etiquetas de defecto necesarias para iniciar el aprendizaje de normalidad</strong><p class="small" style="margin-top:10px">Aplicable a representación visual, anomalía y desviación temporal.</p></div>
+            <div class="checks">
+              <div class="check"><b>1</b><div><h3>Los datos no etiquetados sí tienen valor</h3><p>Imágenes normales, secuencias de sensores y ciclos de proceso sirven para aprender estructura y evolución esperada.</p></div></div>
+              <div class="check"><b>2</b><div><h3>Las etiquetas mejoran la medición, no son un requisito universal</h3><p>Defectos, scrap o fallos históricos permiten cuantificar recall, lead time y calibración cuando existen.</p></div></div>
+              <div class="check"><b>3</b><div><h3>Dos salidas posibles</h3><p>Sin etiquetas: anomalía y desviación. Con eventos históricos: riesgo supervisado y validación económica.</p></div></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Evidencia técnica</div>
+          <h2>Resultados que justifican <span class="gradient">validar en datos reales</span></h2>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="metric">1.00</div><div class="metric-label">AUPRC visual</div><div class="metric-note">DINOv2 + PatchCore/PaDiM en un quick run de MVTec bottle.</div></div>
+            <div class="metric-card"><div class="metric green">+0.0352</div><div class="metric-label">Delta sensor</div><div class="metric-note">Token world model sobre metadata-only en el diagnóstico actual.</div></div>
+            <div class="metric-card"><div class="metric amber">4–6</div><div class="metric-label">Semanas</div><div class="metric-note">Para auditar, comparar, modelar y entregar una recomendación go/no-go.</div></div>
+          </div>
+          <div class="grid two">
+            <div class="card"><h3>Qué sí demuestra</h3><p>La arquitectura visual genera señal fuerte en un benchmark público y el modelo sensor denso añade información temporal incremental.</p></div>
+            <div class="card amber"><h3>Qué no asumimos</h3><p>Un resultado público no garantiza rendimiento en otra línea. El valor se confirma con distribución, defectos y condiciones reales del proceso del cliente.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Piloto</div>
+          <h2>Un proceso corto para llegar a una <span class="gradient">decisión de inversión</span></h2>
+          <div class="timeline">
+            <div class="phase"><div class="week">Semana 1</div><h3>Mapa de datos</h3><p>Inventario, calidad, trazabilidad, temporalidad y definición del caso de uso.</p></div>
+            <div class="phase"><div class="week">Semanas 1–2</div><h3>Baselines</h3><p>Reglas, modelos clásicos y visual foundation para establecer una referencia realista.</p></div>
+            <div class="phase"><div class="week">Semanas 2–5</div><h3>Modelado</h3><p>Heatmaps, risk scoring, sorpresa temporal, calibración y análisis de errores.</p></div>
+            <div class="phase"><div class="week">Semana 6</div><h3>Decisión</h3><p>Demo local, benchmark final, impacto esperado y roadmap de integración.</p></div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Entregables</div>
+          <h2>Una demostración que el equipo puede <span class="gradient">ver, medir y discutir</span></h2>
+          <div class="deliverables">
+            <div class="list-card"><ul class="clean"><li>Manifest y auditoría de calidad de datos.</li><li>Benchmark frente a reglas y baselines fuertes.</li><li>Heatmaps y ranking de inspección visual.</li><li>Riesgo por activo/ciclo y curvas de desviación temporal.</li><li>Métricas operativas: precision@top-k, falsas alarmas y lead time.</li><li>Demo local, informe ejecutivo y documentación técnica.</li><li>Recomendación go/no-go y arquitectura de integración.</li></ul></div>
+            <div class="screen">
+              <div class="screen-top"><strong>Top operational alerts</strong><span class="small">local demo</span></div>
+              <div class="alert-row"><span>Línea 2 · Lote 184</span><div class="riskbar"><i style="width:91%"></i></div><span class="risk-high">High</span></div>
+              <div class="alert-row"><span>Máquina 04 · Ciclo 912</span><div class="riskbar"><i style="width:77%"></i></div><span class="risk-high">High</span></div>
+              <div class="alert-row"><span>Pieza B-3381</span><div class="riskbar"><i style="width:64%"></i></div><span class="risk-mid">Review</span></div>
+              <div class="alert-row"><span>Turno N · Proceso 7</span><div class="riskbar"><i style="width:42%"></i></div><span class="risk-mid">Watch</span></div>
+            </div>
+          </div>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Datos de partida</div>
+          <h2>Empezamos con lo disponible; <span class="gradient">las etiquetas son opcionales</span></h2>
+          <div class="data-grid">
+            <div class="data-box"><span class="data-label">Mínimo para empezar</span><ul><li>Imágenes normales o series temporales de proceso.</li><li>Timestamp, identificador de pieza/activo/ciclo y orden temporal.</li><li>Contexto operativo disponible: receta, material, setpoints o máquina.</li><li>Un responsable técnico para interpretar el proceso y sus límites.</li></ul></div>
+            <div class="data-box optional"><span class="data-label">Aumenta el valor, pero no bloquea el piloto</span><ul><li>Defectos etiquetados o resultados de inspección.</li><li>Fallos, scrap, retrabajo o mantenimiento histórico.</li><li>Coste de falsa alarma y coste de defecto no detectado.</li><li>Comandos temporales verificados para evaluar acción-condicionada.</li></ul></div>
+          </div>
+          <p class="small" style="margin-top:17px">La autosupervisión permite aprender normalidad sin etiquetas. Los eventos históricos se utilizan cuando se quiere medir o calibrar un objetivo supervisado concreto.</p>
+        </div></section>
+        
+        <section class="slide"><div class="slide-inner">
+          <div class="kicker">Criterios de éxito</div>
+          <h2>El piloto termina con una respuesta <span class="gradient">cuantitativa</span></h2>
+          <div class="success-grid">
+            <div class="success"><div class="metric">↓</div><h3>Menos inspección innecesaria</h3><p>Concentrar la revisión manual en las piezas o ciclos de mayor riesgo.</p></div>
+            <div class="success"><div class="metric green">↑</div><h3>Más anticipación</h3><p>Detectar la desviación antes del defecto, la parada o el mantenimiento reactivo.</p></div>
+            <div class="success"><div class="metric amber">✓</div><h3>Go / no-go defendible</h3><p>Decidir si integrar, ampliar datos o descartar el caso sin depender de promesas de caja negra.</p></div>
+          </div>
+          <div class="card emphasis" style="margin-top:22px;text-align:center;min-height:auto"><h3 style="font-size:1.45rem">Una plataforma de validación industrial: baseline fuerte, IA donde aporta y resultados trazables.</h3></div>
+        </div></section>
+        
+</main>
+<footer class="footer-controls">
+  <span class="counter" id="count">01 / 12</span>
+  <div class="progress"><i id="progressBar"></i></div>
+  <div class="nav-buttons"><button id="prev" aria-label="Previous slide">←</button><button id="next" aria-label="Next slide">→</button></div>
+</footer>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const count=document.getElementById('count');
+const bar=document.getElementById('progressBar');
+let index=0;
+function go(next){
+  index=Math.max(0,Math.min(slides.length-1,next));
+  slides.forEach((slide,i)=>slide.classList.toggle('active',i===index));
+  count.textContent=`${String(index+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
+  bar.style.width=`${((index+1)/slides.length)*100}%`;
+  history.replaceState(null,'',`#${index+1}`);
+}
+document.getElementById('prev').addEventListener('click',()=>go(index-1));
+document.getElementById('next').addEventListener('click',()=>go(index+1));
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(index+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(index-1)}
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(slides.length-1);
+});
+let touchStart=null;
+document.addEventListener('touchstart',e=>touchStart=e.changedTouches[0].clientX,{passive:true});
+document.addEventListener('touchend',e=>{
+  if(touchStart===null)return;
+  const dx=e.changedTouches[0].clientX-touchStart;
+  if(Math.abs(dx)>55)go(index+(dx<0?1:-1));
+  touchStart=null;
+},{passive:true});
+const hash=Math.max(1,parseInt(location.hash.slice(1)||'1',10));
+go(hash-1);
+</script>
+</body>
+</html>

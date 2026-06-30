@@ -1,0 +1,5 @@
+data:
+  dataset: dagm_2007
+  raw_root: data/raw/visual/dagm_2007
+  status: pending
+

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "industrial-jepa-mvp"
+version = "0.1.0"
+description = "MVP for Sensor-JEPA and Visual-JEPA industrial demos."
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "pandas",
+  "scikit-learn",
+  "scipy",
+  "Pillow",
+  "PyYAML",
+  "torch",
+  "torchvision",
+  "matplotlib",
+  "tqdm",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

@@ -1,0 +1,17 @@
+extends: configs/visual_jepa/dense_mvtec_all.yaml
+
+memory:
+  output_dir: outputs/visual_jepa/memory_benchmark_dinov2
+  coreset_ratio: 0.1
+  coreset_method: random
+  top_k: 5
+  max_memory_patches: 20000
+  image_threshold_quantile: 0.99
+  pixel_threshold_quantile: 0.995
+  save_heatmaps: 4
+
+benchmark:
+  output_dir: outputs/visual_jepa/dense_benchmark_dinov2
+  memory_backbones: [dinov2]
+  padim_backbones: [dinov2]
+

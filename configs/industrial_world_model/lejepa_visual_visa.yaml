@@ -1,0 +1,12 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_visual
+dataset:
+  name: visa
+  root: data/raw/visual/visa
+  categories: candle
+loss:
+  lambda_sigreg: 0.05
+train:
+  epochs: 2
+output_dir: outputs/industrial_world_model/lejepa_visual_visa

@@ -1,0 +1,5 @@
+data:
+  dataset: severstal
+  raw_root: data/raw/visual/severstal
+  status: pending
+

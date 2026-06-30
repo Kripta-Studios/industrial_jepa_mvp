@@ -1,0 +1,15 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_visual
+dataset:
+  name: mvtec_ad
+  root: data/raw/visual/mvtec_ad
+  categories: bottle
+model:
+  input_dim: 64
+  embedding_dim: 32
+loss:
+  lambda_sigreg: 0.05
+train:
+  epochs: 2
+output_dir: outputs/industrial_world_model/lejepa_visual

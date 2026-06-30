@@ -1,0 +1,5 @@
+data:
+  dataset: visa
+  raw_root: data/raw/visual/visa
+  status: partial
+

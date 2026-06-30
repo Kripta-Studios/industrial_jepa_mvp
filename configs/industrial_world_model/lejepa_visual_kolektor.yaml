@@ -1,0 +1,12 @@
+seed: 42
+project: industrial_world_model
+task: lejepa_visual
+dataset:
+  name: kolektor_sdd
+  root: data/raw/visual/kolektor_sdd
+  categories: all
+loss:
+  lambda_sigreg: 0.05
+train:
+  epochs: 2
+output_dir: outputs/industrial_world_model/lejepa_visual_kolektor

@@ -1,0 +1,14 @@
+seed: 42
+project: industrial_world_model
+task: visual_foundation
+dataset:
+  name: mvtec_ad
+  root: data/raw/visual/mvtec_ad
+  categories: bottle
+image_size: 224
+model:
+  backbone: dinov2
+  patch_size: 16
+  top_k: 5
+  coreset_ratio: 0.2
+output_dir: outputs/industrial_world_model/visual_foundation

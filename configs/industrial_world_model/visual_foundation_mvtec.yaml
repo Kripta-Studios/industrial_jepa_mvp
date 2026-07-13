@@ -8,7 +8,16 @@ dataset:
 image_size: 224
 model:
   backbone: dinov2
+  # Fail closed when the requested pretrained backbone is unavailable.
+  # Set true only for a deliberately labelled patch_stats smoke run.
+  allow_fallback: false
   patch_size: 16
   top_k: 5
   coreset_ratio: 0.2
+evaluation:
+  # MVTec AD has no anomalous validation split. Thresholded secondary metrics
+  # use this quantile on a held-out nominal subset of train; AUROC/AUPRC remain
+  # the primary threshold-free test metrics.
+  validation_fraction: 0.2
+  nominal_threshold_quantile: 0.99
 output_dir: outputs/industrial_world_model/visual_foundation

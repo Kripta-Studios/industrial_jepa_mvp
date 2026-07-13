@@ -1,10 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import os
+from pathlib import Path
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+class BackboneUnavailableError(RuntimeError):
+    """Raised when a requested backbone cannot be loaded without substitution."""
+
+
+class GatedWeightsUnauthorizedError(BackboneUnavailableError):
+    """Raised when official gated weights require unavailable authorization."""
 
 
 @dataclass
@@ -15,6 +26,17 @@ class FeatureExtractorInfo:
     dinov3_available: bool
     fallback_used: bool
     notes: str
+    checkpoint_revision: str | None = None
+    checkpoint_sha256: str | None = None
+    blocker_code: str | None = None
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 class PatchStatsFeatureExtractor:
@@ -56,14 +78,21 @@ class PatchStatsFeatureExtractor:
 class TorchvisionResNetPatchExtractor(PatchStatsFeatureExtractor):
     """Dense ResNet feature extractor with safe fallback semantics."""
 
-    def __init__(self, requested_backbone: str = "resnet18", patch_size: int = 16, image_size: int = 224):
+    def __init__(
+        self,
+        requested_backbone: str = "resnet18",
+        patch_size: int = 16,
+        image_size: int = 224,
+        allow_fallback: bool = False,
+    ):
         super().__init__(patch_size=patch_size, image_size=image_size)
         self.requested_backbone = requested_backbone
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model: nn.Module | None = None
+        self.allow_fallback = bool(allow_fallback)
         self.info = FeatureExtractorInfo(
             requested_backbone=requested_backbone,
-            actual_backbone="patch_stats_resnet_safe_fallback",
+            actual_backbone="patch_stats",
             pretrained=False,
             dinov3_available=False,
             fallback_used=True,
@@ -103,10 +132,15 @@ class TorchvisionResNetPatchExtractor(PatchStatsFeatureExtractor):
                 notes=f"Pretrained torchvision {self.requested_backbone} layer3 dense features ({channels} channels)",
             )
         except Exception as exc:
+            if not self.allow_fallback:
+                raise BackboneUnavailableError(
+                    f"requested backbone {self.requested_backbone!r} is unavailable; "
+                    "pass allow_fallback=True to use patch_stats explicitly"
+                ) from exc
             self.model = None
             self.info = FeatureExtractorInfo(
                 requested_backbone=self.requested_backbone,
-                actual_backbone="patch_stats_resnet_safe_fallback",
+                actual_backbone="patch_stats",
                 pretrained=False,
                 dinov3_available=False,
                 fallback_used=True,
@@ -133,15 +167,22 @@ class TorchvisionResNetPatchExtractor(PatchStatsFeatureExtractor):
 
 
 class DinoV2FeatureExtractor:
-    def __init__(self, model_name: str = "dinov2_vits14", image_size: int = 224, batch_size: int = 8):
+    def __init__(
+        self,
+        model_name: str = "dinov2_vits14",
+        image_size: int = 224,
+        batch_size: int = 8,
+        allow_fallback: bool = False,
+    ):
         self.model_name = model_name
         self.image_size = int(image_size)
         self.batch_size = int(batch_size)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = None
+        self.allow_fallback = bool(allow_fallback)
         self.info = FeatureExtractorInfo(
             requested_backbone="dinov2",
-            actual_backbone="patch_stats_dinov2_safe_fallback",
+            actual_backbone="patch_stats",
             pretrained=False,
             dinov3_available=False,
             fallback_used=True,
@@ -169,11 +210,20 @@ class DinoV2FeatureExtractor:
                 dinov3_available=False,
                 fallback_used=False,
                 notes="DINOv2 loaded from local torch.hub cache",
+                checkpoint_revision="facebookresearch/dinov2:main local torch.hub cache",
+                checkpoint_sha256=_sha256_file(Path(torch.hub.get_dir()) / "checkpoints" / "dinov2_vits14_pretrain.pth")
+                if (Path(torch.hub.get_dir()) / "checkpoints" / "dinov2_vits14_pretrain.pth").is_file()
+                else None,
             )
         except Exception as exc:
+            if not self.allow_fallback:
+                raise BackboneUnavailableError(
+                    f"requested backbone {self.model_name!r} is unavailable in the local torch.hub cache; "
+                    "pass allow_fallback=True to use patch_stats explicitly"
+                ) from exc
             self.info = FeatureExtractorInfo(
                 requested_backbone="dinov2",
-                actual_backbone="patch_stats_dinov2_safe_fallback",
+                actual_backbone="patch_stats",
                 pretrained=False,
                 dinov3_available=False,
                 fallback_used=True,
@@ -203,22 +253,110 @@ class DinoV2FeatureExtractor:
         return torch.cat(feats, dim=0), grid_shape
 
 
-def build_feature_extractor(backbone: str = "patch_stats", patch_size: int = 16, image_size: int = 224):
+def _explicit_dinov3_fallback(patch_size: int, image_size: int) -> PatchStatsFeatureExtractor:
+    extractor = PatchStatsFeatureExtractor(patch_size=patch_size, image_size=image_size)
+    extractor.info = FeatureExtractorInfo(
+        requested_backbone="dinov3",
+        actual_backbone="patch_stats",
+        pretrained=False,
+        dinov3_available=False,
+        fallback_used=True,
+        notes="Explicit patch_stats fallback: this run did not execute DINOv3.",
+    )
+    return extractor
+
+
+class DinoV3FeatureExtractor:
+    """Official Hugging Face DINOv3 loader with gated-access provenance."""
+
+    def __init__(
+        self,
+        model_id: str = "facebook/dinov3-vits16-pretrain-lvd1689m",
+        revision: str = "main",
+        image_size: int = 224,
+        batch_size: int = 8,
+    ):
+        self.model_id = model_id
+        self.revision = revision
+        self.image_size = int(image_size)
+        self.batch_size = int(batch_size)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+        if not token:
+            raise GatedWeightsUnauthorizedError(
+                "gated_weights_unauthorized: official DINOv3 weights require an accepted Hugging Face license "
+                "and HF_TOKEN/HUGGING_FACE_HUB_TOKEN"
+            )
+        try:
+            from transformers import AutoImageProcessor, AutoModel
+
+            self.processor = AutoImageProcessor.from_pretrained(
+                model_id, revision=revision, token=token
+            )
+            self.model = AutoModel.from_pretrained(
+                model_id, revision=revision, token=token
+            ).eval().to(self.device)
+            for parameter in self.model.parameters():
+                parameter.requires_grad_(False)
+        except Exception as exc:
+            blocker = "gated_weights_unauthorized" if "401" in str(exc) or "gated" in str(exc).lower() else "dinov3_load_failed"
+            raise BackboneUnavailableError(f"{blocker}: {type(exc).__name__}: {exc}") from exc
+        self.info = FeatureExtractorInfo(
+            requested_backbone="dinov3",
+            actual_backbone=model_id,
+            pretrained=True,
+            dinov3_available=True,
+            fallback_used=False,
+            notes="Official Hugging Face DINOv3 model loaded with explicit gated authorization.",
+            checkpoint_revision=revision,
+        )
+
+    @torch.no_grad()
+    def extract(self, images: torch.Tensor) -> tuple[torch.Tensor, tuple[int, int]]:
+        if images.ndim != 4:
+            raise ValueError("Expected images [B,C,H,W]")
+        outputs = []
+        grid_shape = None
+        for start in range(0, len(images), self.batch_size):
+            batch = images[start : start + self.batch_size].detach().cpu().permute(0, 2, 3, 1).numpy()
+            inputs = self.processor(images=list(batch), return_tensors="pt")
+            hidden = self.model(**{key: value.to(self.device) for key, value in inputs.items()}).last_hidden_state
+            patch_tokens = hidden[:, 1:].detach().float().cpu()
+            side = int(round(patch_tokens.shape[1] ** 0.5))
+            if side * side != patch_tokens.shape[1]:
+                raise RuntimeError("DINOv3 patch-token count is not a square grid")
+            grid_shape = (side, side)
+            outputs.append(F.normalize(patch_tokens, dim=-1))
+        return torch.cat(outputs), grid_shape
+
+
+def build_feature_extractor(
+    backbone: str = "patch_stats",
+    patch_size: int = 16,
+    image_size: int = 224,
+    *,
+    allow_fallback: bool = False,
+):
     name = backbone.lower()
     if name in {"patch_stats", "pixel_patch", "pixel"}:
         return PatchStatsFeatureExtractor(patch_size=patch_size, image_size=image_size)
     if name in {"dinov2", "dino"}:
-        return DinoV2FeatureExtractor(image_size=image_size)
-    if name in {"resnet18", "wide_resnet50", "dinov3"}:
-        extractor = TorchvisionResNetPatchExtractor(requested_backbone=backbone, patch_size=patch_size, image_size=image_size)
-        if name == "dinov3":
-            extractor.info = FeatureExtractorInfo(
-                requested_backbone="dinov3",
-                actual_backbone="patch_stats_dinov3_safe_fallback",
-                pretrained=False,
-                dinov3_available=False,
-                fallback_used=True,
-                notes="DINOv3 weights were not loaded automatically; fallback keeps benchmark executable",
-            )
-        return extractor
+        return DinoV2FeatureExtractor(image_size=image_size, allow_fallback=allow_fallback)
+    if name in {"resnet18", "wide_resnet50"}:
+        return TorchvisionResNetPatchExtractor(
+            requested_backbone=backbone,
+            patch_size=patch_size,
+            image_size=image_size,
+            allow_fallback=allow_fallback,
+        )
+    if name == "dinov3":
+        try:
+            return DinoV3FeatureExtractor(image_size=image_size)
+        except BackboneUnavailableError as exc:
+            if not allow_fallback:
+                raise
+            fallback = _explicit_dinov3_fallback(patch_size, image_size)
+            fallback.info.blocker_code = "gated_weights_unauthorized" if "gated_weights_unauthorized" in str(exc) else "dinov3_load_failed"
+            fallback.info.notes = f"Explicit patch_stats fallback; DINOv3 did not run: {exc}"
+            return fallback
     raise ValueError(f"Unknown backbone: {backbone}")

@@ -15,6 +15,14 @@
 
 \begin{document}
 
+\begin{center}
+\fbox{\parbox{0.94\textwidth}{\textbf{Post-audit evidence status (2026-07-13).}
+Held-out-hardness values in this manuscript are invalidated: equal raw physical
+hardness values could be assigned to different bins/splits. Visual thresholded
+metrics that selected a threshold on test are also invalid. No post-fix metric
+is inserted here; tables remain historical until a reproducible rerun.}}
+\end{center}
+
 \title{Disentangling Lifecycle Proxies, Sensor Features and Latent Predictive Representations for CNC Failure-Soon Risk Scoring}
 
 \author{EVOCON Solutions Research Group
@@ -49,7 +57,7 @@ In this work, we present a systematic evaluation of Sensor-JEPA representations,
     \item A \textbf{leakage and feature audit} checking for target columns or RUL indicators.
     \item A matched-pair \textbf{incremental value benchmark} reporting performance deltas.
     \item A \textbf{no-cycle protocol} that removes cycle index proxies.
-    \item \textbf{Hard generalization protocols} with completely held-out tools, cutting conditions, and material hardness levels.
+    \item \textbf{Hard generalization protocols}; material-hardness rows require a post-fix rerun with raw values disjoint.
 \end{itemize}
 
 \section{Related Work}
@@ -219,11 +227,11 @@ Engineered sensors only & 0.5583 & +0.3197 \\
 \end{table*}
 
 \subsection{Hard Generalization Evidence}
-Table~\ref{tab:hardgen} lists AUPRC across the three hard generalization splits. Under held-out hardness, sensor features outperform metadatas significantly. However, under tool and cutting condition exclusions, the metadata baseline remains competitive.
+Table~\ref{tab:hardgen} is a historical pre-fix record. Its held-out-hardness rows do not establish unseen physical-value generalization and must not be compared with post-fix results.
 
 \begin{table*}[t]
 \centering
-\caption{Hard-generalization AUPRC (3 seeds, $h=3$, $K=10$).}
+\caption{Historical hard-generalization AUPRC; hardness rows invalidated pending rerun.}
 \label{tab:hardgen}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -274,7 +282,7 @@ Under the specific \texttt{held\_out\_hardness\_bin} protocol, combining feature
 
 \begin{table*}[t]
 \centering
-\caption{JEPA vs. engineered features in the held-out-hardness split.}
+\caption{Invalidated pre-fix JEPA vs. engineered held-out-hardness split.}
 \label{tab:jepavseng_hardness}
 \footnotesize
 \setlength{\tabcolsep}{4pt}

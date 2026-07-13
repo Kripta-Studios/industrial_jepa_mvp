@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "post_audit_rerun_required",
+  "updated_utc": "2026-07-13T00:00:00Z",
+  "claims": {
+    "held_out_hardness": "invalidated_pending_rerun_with_raw_physical_value_disjointness",
+    "thresholded_visual_metrics": "invalidated_pending_validation_only_threshold_rerun",
+    "dinov3": "no_verified_post_audit_run"
+  },
+  "runs": [],
+  "required_run_fields": [
+    "run_id",
+    "mode",
+    "claim_tier",
+    "git_commit",
+    "config_path",
+    "config_sha256",
+    "dataset_manifest_path",
+    "requested_backbone",
+    "actual_backbone",
+    "fallback_used",
+    "threshold_source",
+    "metrics_path"
+  ],
+  "notes": "No post-audit benchmark metrics are registered. Historical hard-split and test-fitted-threshold figures must not be reused."
+}

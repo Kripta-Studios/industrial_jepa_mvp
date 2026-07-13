@@ -108,12 +108,14 @@ def _mean_std(results: pd.DataFrame) -> pd.DataFrame:
 
 def run_hard_generalization_evidence(
     cfg: dict[str, Any],
-    seeds: list[int] | None = None,
+    model_seeds: list[int] | None = None,
+    data_seed: int = 42,
+    split_seed: int = 42,
     out_root: str | Path = "outputs/sensor_jepa/hard_generalization_evidence",
 ) -> dict[str, Path]:
     out_root = ensure_dir(out_root)
     evidence_cfg = cfg.get("hard_generalization_evidence", {})
-    seeds = seeds or [int(s) for s in evidence_cfg.get("seeds", [42, 123, 999])]
+    model_seeds = model_seeds or [int(s) for s in evidence_cfg.get("model_seeds", evidence_cfg.get("seeds", [42, 123, 999]))]
     estimator = evidence_cfg.get("estimator", "logistic_regression")
     world_epochs = int(evidence_cfg.get("world_model_epochs", cfg.get("world_model", {}).get("epochs", 2)))
     split_filter = set(evidence_cfg.get("splits", ["held_out_tool_id", "held_out_hardness_bin", "held_out_cutting_condition"]))
@@ -123,22 +125,25 @@ def run_hard_generalization_evidence(
     all_rows: list[dict[str, Any]] = []
     all_split_rows: list[dict[str, Any]] = []
 
-    for seed in seeds:
-        seed_everything(seed)
-        combo_cfg = _cfg_for_seed(cfg, seed, out_root)
+    # Data membership and split assignment are frozen once. Model seeds vary
+    # stochastic training only; they must never reshuffle the held-out groups.
+    data_cfg = _cfg_for_seed(cfg, int(data_seed), out_root)
+    bundle = prepare_transition_from_config(data_cfg)
+    _, _, meta_all = _concat_bundle(bundle)
+    splits = [s for s in build_all_hard_splits(meta_all, seed=int(split_seed)) if s.name in split_filter]
+    all_split_rows = hard_split_report_rows(splits)
+    for row in all_split_rows:
+        row["data_seed"] = int(data_seed)
+        row["split_seed"] = int(split_seed)
+
+    for model_seed in model_seeds:
+        seed_everything(model_seed)
+        combo_cfg = _cfg_for_seed(cfg, model_seed, out_root)
         combo_cfg.setdefault("world_model", {})
         combo_cfg["world_model"]["epochs"] = world_epochs
-        bundle = prepare_transition_from_config(combo_cfg)
-        _, _, meta_all = _concat_bundle(bundle)
-        splits = [s for s in build_all_hard_splits(meta_all, seed=seed) if s.name in split_filter]
-        split_rows = hard_split_report_rows(splits)
-        for row in split_rows:
-            row["seed"] = seed
-        all_split_rows.extend(split_rows)
-
         for split in splits:
             if split.status != "ok":
-                all_rows.append({"split_name": split.name, "status": split.status, "model_name": "pending", "seed": seed, "reason": split.reason})
+                all_rows.append({"split_name": split.name, "status": split.status, "model_name": "pending", "seed": model_seed, "model_seed": model_seed, "data_seed": data_seed, "split_seed": split_seed, "reason": split.reason})
                 continue
             split_bundle = _subset_bundle(bundle, split.train_mask, split.val_mask, split.test_mask)
             meta_train, _ = _metadata_matrix(split_bundle, "train", include_cycle=True)
@@ -174,7 +179,8 @@ def run_hard_generalization_evidence(
                 ("metadata_plus_sensor_raw_plus_current_z", np.concatenate([meta_train, raw_train, z_train], axis=1), np.concatenate([meta_val, raw_val, z_val], axis=1), np.concatenate([meta_test, raw_test, z_test], axis=1), "metadata_features,cycle_features,sensor_raw_features,jepa_global_embeddings"),
             ]
             for model_name, x_train, x_val, x_test, groups in feature_sets:
-                _evaluate_set(all_rows, split.name, split_bundle, model_name, x_train, x_val, x_test, groups, estimator, seed, horizon, target)
+                _evaluate_set(all_rows, split.name, split_bundle, model_name, x_train, x_val, x_test, groups, estimator, model_seed, horizon, target)
+                all_rows[-1].update({"model_seed": model_seed, "data_seed": data_seed, "split_seed": split_seed})
 
     results = pd.DataFrame(all_rows)
     ok = results[results["status"].eq("ok")].copy() if "status" in results else pd.DataFrame()
@@ -208,7 +214,7 @@ def run_hard_generalization_evidence(
         paths["report"],
         "Hard Generalization Sensor Evidence",
         {
-            "Protocol": "Held-out metadata groups. Deltas are computed against metadata-only within same split and seed.",
+            "Protocol": "One frozen data/split seed; only model seed varies. Deltas are computed against metadata-only within the same split and model seed.",
             "Split Availability": markdown_table(pd.DataFrame(all_split_rows).to_dict("records")),
             "Top Mean/Std Rows": markdown_table(top.to_dict("records")) if len(top) else "No completed rows.",
             "Raw vs JEPA Deltas": markdown_table(value_summary.head(30).to_dict("records")) if len(value_summary) else "No comparison rows.",

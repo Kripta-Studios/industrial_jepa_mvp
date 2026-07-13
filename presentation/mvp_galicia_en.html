@@ -74,7 +74,7 @@
   <main>
     <section class="section hero" id="s1">
       <div>
-        <div class="badges"><span class="badge">Vision + sensors</span><span class="badge">DINOv2 + PatchCore</span><span class="badge">Risk scoring</span><span class="badge">4-6 week pilot</span></div>
+        <div class="badges"><span class="badge">Vision + sensors</span><span class="badge">Post-audit results pending</span><span class="badge">Risk scoring</span><span class="badge">4-6 week pilot</span></div>
         <h1>Industrial Predictive Quality MVP</h1>
         <p class="lead">Anticipate defects, failures and process deviations by combining industrial vision, sensors and process data.</p>
         <p class="bodycopy">A fast pilot to turn plant history into risk rankings, defect heatmaps and actionable inspection decisions.</p>
@@ -109,23 +109,19 @@
       <div class="pipeline"><div class="pipe"><div class="num">1</div><h3>Plant data</h3><p>Cameras, sensors, SCADA, test logs, maintenance records</p></div><div class="pipe"><div class="num">2</div><h3>Useful signal</h3><p>Dense vision, visual memory, physical sensors</p></div><div class="pipe"><div class="num">3</div><h3>Models</h3><p>Risk scoring, anomalies and expected deviation</p></div><div class="pipe"><div class="num">4</div><h3>Alerts</h3><p>Top 10%, heatmaps, part/cycle/batch/line</p></div><div class="pipe"><div class="num">5</div><h3>Decision</h3><p>Inspect, adjust and integrate</p></div></div>
     </section>
     <section class="section" id="s4">
-      <h2>Current results that support selling a pilot</h2><p class="lead">Internal validation on public industrial data: strong visual inspection signal and useful sensor signal when cycle proxies are not enough.</p>
-      <div class="grid"><div class="card"><div class="metric">0.60</div><h3>Pixel baseline</h3><p>AUPRC · Simple visual control</p></div>
-<div class="card"><div class="metric">1.00</div><h3>DINOv2 + PatchCore</h3><p>AUPRC · Quick run MVTec bottle</p></div>
-<div class="card"><div class="metric">0.999</div><h3>ResNet18 + PatchCore</h3><p>AUPRC · Quick run MVTec bottle</p></div>
-<div class="card"><div class="metric">0.558</div><h3>Sensor engineered</h3><p>AUPRC · No-cycle CNC</p></div>
-<div class="card"><div class="metric">0.550</div><h3>Future learned signal</h3><p>AUPRC · No-cycle CNC</p></div>
-<div class="card"><div class="metric">0.763</div><h3>Hardness/material sensors</h3><p>AUPRC · Held-out hardness</p></div>
-<div class="card"><div class="metric">0.720</div><h3>Sensors + learned signal</h3><p>AUPRC · Held-out hardness</p></div>
-<div class="card"><div class="metric">+0.035</div><h3>JEPA delta over engineered</h3><p>AUPRC · Best hardness case</p></div></div>
+      <h2>Post-audit evidence status</h2><p class="lead">Visual test-fitted thresholds and hardness splits with overlapping physical values are withdrawn pending rerun.</p>
+      <div class="grid"><div class="card"><div class="metric">WITHDRAWN</div><h3>Visual thresholded</h3><p>pre-fix · Test-fitted threshold; validation-only rerun pending</p></div>
+<div class="card"><div class="metric">PENDING</div><h3>DINO / fallback</h3><p>provenance · Only verified actual_backbone may be named</p></div>
+<div class="card"><div class="metric">WITHDRAWN</div><h3>Held-out hardness</h3><p>pre-fix · Physical-value overlap; disjoint rerun pending</p></div>
+<div class="card"><div class="metric">0</div><h3>Post-audit results</h3><p>runs · results/index.json contains no corrected benchmark yet</p></div></div>
       <div class="card" style="margin-top:18px"><h3>Business reading</h3><p>When cycle counts or threshold checks are not enough, physical and visual signals can add actionable information. The pilot validates whether this is true in the client's own data.</p></div>
     </section>
     <section class="section">
       <h2>Specific module: machine failure-soon risk</h2><p class="lead">The sensor module is sold as risk scoring: physical signals, process context and prioritised alerts.</p>
-      <div class="value-grid"><div class="kpi"><div class="metric small">0.701</div><h3>Operational metadata + future signal</h3><p>AUPRC, h=3/K=10</p></div>
-<div class="kpi"><div class="metric small">0.558</div><h3>No-cycle sensor engineered</h3><p>AUPRC without cycle proxies</p></div>
-<div class="kpi"><div class="metric small">0.550</div><h3>No-cycle predicted future</h3><p>AUPRC future latent signal</p></div>
-<div class="kpi"><div class="metric small">0.763</div><h3>Held-out hardness sensor engineered</h3><p>AUPRC material/hardness shift</p></div></div>
+      <div class="value-grid"><div class="kpi"><div class="metric small">SMOKE</div><h3>Status</h3><p>Pipeline capability; no post-audit benchmark</p></div>
+<div class="kpi"><div class="metric small">VAL</div><h3>Threshold</h3><p>Fit only on validation</p></div>
+<div class="kpi"><div class="metric small">RAW</div><h3>Hardness</h3><p>Physical values disjoint and recorded</p></div>
+<div class="kpi"><div class="metric small">ACTUAL</div><h3>Backbone</h3><p>Explicit fallback or fail closed</p></div></div>
     </section>
     <section class="section">
       <h2>Product and services</h2>

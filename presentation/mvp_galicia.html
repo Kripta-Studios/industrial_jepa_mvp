@@ -74,7 +74,7 @@
   <main>
     <section class="section hero" id="s1">
       <div>
-        <div class="badges"><span class="badge">Visión + sensores</span><span class="badge">DINOv2 + PatchCore</span><span class="badge">Risk scoring</span><span class="badge">Piloto 4-6 semanas</span></div>
+        <div class="badges"><span class="badge">Visión + sensores</span><span class="badge">Resultados post-audit pendientes</span><span class="badge">Risk scoring</span><span class="badge">Piloto 4-6 semanas</span></div>
         <h1>Industrial Predictive Quality MVP</h1>
         <p class="lead">Anticipar defectos, fallos y desviaciones combinando visión industrial, sensores y datos de proceso.</p>
         <p class="bodycopy">Un piloto rápido para transformar datos históricos de planta en rankings de riesgo, heatmaps de defecto y decisiones de inspección accionables.</p>
@@ -109,23 +109,19 @@
       <div class="pipeline"><div class="pipe"><div class="num">1</div><h3>Datos planta</h3><p>Cámaras, sensores, SCADA, test logs, GMAO</p></div><div class="pipe"><div class="num">2</div><h3>Señal útil</h3><p>Visión densa, memoria visual, sensores físicos</p></div><div class="pipe"><div class="num">3</div><h3>Modelos</h3><p>Risk scoring, anomalías y desviación esperada</p></div><div class="pipe"><div class="num">4</div><h3>Alertas</h3><p>Top 10%, heatmaps, pieza/ciclo/lote/línea</p></div><div class="pipe"><div class="num">5</div><h3>Decisión</h3><p>Inspeccionar, ajustar e integrar</p></div></div>
     </section>
     <section class="section" id="s4">
-      <h2>Resultados actuales que sí sirven para vender un piloto</h2><p class="lead">Validación interna con datos públicos industriales: visión muy fuerte para inspección y sensor útil cuando los proxies de ciclo no bastan.</p>
-      <div class="grid"><div class="card"><div class="metric">0.60</div><h3>Pixel baseline</h3><p>AUPRC · Control visual simple</p></div>
-<div class="card"><div class="metric">1.00</div><h3>DINOv2 + PatchCore</h3><p>AUPRC · Quick run MVTec bottle</p></div>
-<div class="card"><div class="metric">0.999</div><h3>ResNet18 + PatchCore</h3><p>AUPRC · Quick run MVTec bottle</p></div>
-<div class="card"><div class="metric">0.558</div><h3>Sensor engineered</h3><p>AUPRC · No-cycle CNC</p></div>
-<div class="card"><div class="metric">0.550</div><h3>Señal aprendida futura</h3><p>AUPRC · No-cycle CNC</p></div>
-<div class="card"><div class="metric">0.763</div><h3>Hardness/material sensores</h3><p>AUPRC · Held-out hardness</p></div>
-<div class="card"><div class="metric">0.720</div><h3>Sensores + señal aprendida</h3><p>AUPRC · Held-out hardness</p></div>
-<div class="card"><div class="metric">+0.035</div><h3>Delta JEPA sobre engineered</h3><p>AUPRC · Mejor caso hardness</p></div></div>
+      <h2>Estado post-auditoría de la evidencia</h2><p class="lead">Las cifras visuales con umbral elegido en test y las de dureza con valores físicos solapados quedan retiradas hasta rerun.</p>
+      <div class="grid"><div class="card"><div class="metric">RETIRADO</div><h3>Visual thresholded</h3><p>pre-fix · Umbral ajustado en test; rerun validation-only pendiente</p></div>
+<div class="card"><div class="metric">PENDIENTE</div><h3>DINO / fallback</h3><p>trazabilidad · Solo actual_backbone verificado puede nombrarse</p></div>
+<div class="card"><div class="metric">RETIRADO</div><h3>Held-out hardness</h3><p>pre-fix · Valores físicos solapados; rerun disjunto pendiente</p></div>
+<div class="card"><div class="metric">0</div><h3>Resultados post-audit</h3><p>runs · results/index.json no registra aún un benchmark corregido</p></div></div>
       <div class="card" style="margin-top:18px"><h3>Lectura comercial</h3><p>Cuando no basta con contar ciclos o revisar umbrales, las señales físicas y visuales aportan información accionable. El piloto valida si eso ocurre en los datos del cliente.</p></div>
     </section>
     <section class="section">
       <h2>Módulo específico: fallo próximo en máquina</h2><p class="lead">La parte sensor no se vende como magia: se vende como scoring de riesgo con señales físicas, proceso y alertas priorizadas.</p>
-      <div class="value-grid"><div class="kpi"><div class="metric small">0.701</div><h3>Operational metadata + future signal</h3><p>AUPRC, h=3/K=10</p></div>
-<div class="kpi"><div class="metric small">0.558</div><h3>No-cycle sensor engineered</h3><p>AUPRC sin proxies de ciclo</p></div>
-<div class="kpi"><div class="metric small">0.550</div><h3>No-cycle predicted future</h3><p>AUPRC señal latente futura</p></div>
-<div class="kpi"><div class="metric small">0.763</div><h3>Held-out hardness sensor engineered</h3><p>AUPRC cambio material/dureza</p></div></div>
+      <div class="value-grid"><div class="kpi"><div class="metric small">SMOKE</div><h3>Estado</h3><p>Capacidad de pipeline; no benchmark post-audit</p></div>
+<div class="kpi"><div class="metric small">VAL</div><h3>Threshold</h3><p>Se ajusta solo en validación</p></div>
+<div class="kpi"><div class="metric small">RAW</div><h3>Hardness</h3><p>Valores físicos disjuntos y registrados</p></div>
+<div class="kpi"><div class="metric small">ACTUAL</div><h3>Backbone</h3><p>Fallback explícito o fallo cerrado</p></div></div>
     </section>
     <section class="section">
       <h2>Producto y servicios ofrecidos</h2>

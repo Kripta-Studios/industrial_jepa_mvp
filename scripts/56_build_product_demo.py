@@ -24,7 +24,10 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     data = {
         "title": "Industrial Predictive Quality World Model",
-        "positioning": "Pilot-ready research MVP for predictive quality and anomaly detection.",
+        "mode": "smoke",
+        "claim_tier": "smoke",
+        "comparable_benchmark": False,
+        "positioning": "Research smoke/demo for predictive quality and anomaly detection; not benchmark evidence.",
         "dataset_manifest": _read_csv(res / "dataset_manifest.csv") if (res / "dataset_manifest.csv").exists() else json.loads((res / "dataset_manifest.json").read_text(encoding="utf-8")) if (res / "dataset_manifest.json").exists() else [{"status": "missing"}],
         "visual_foundation": _read_csv(res / "visual_foundation" / "results.csv"),
         "lejepa_visual": _read_csv(res / "lejepa_visual" / "anomaly_results.csv"),
@@ -59,7 +62,7 @@ def main() -> None:
 <body>
   <header class="hero">
     <div>
-      <span class="badge">Vision + Sensors + Process</span><span class="badge">Pilot-ready MVP</span>
+      <span class="badge">Vision + Sensors + Process</span><span class="badge">Research smoke demo</span>
       <h1>Industrial Predictive Quality World Model</h1>
       <p>Un sistema para aprender el comportamiento esperado de procesos industriales normales y priorizar desviaciones: defectos visuales, señales sensoriales anómalas y riesgo por ciclo/lote/línea.</p>
     </div>
@@ -72,7 +75,7 @@ def main() -> None:
   </div></section>
   <section><h2>Resultados cargados</h2><div id="tables"></div></section>
   <section><h2>Piloto comercial</h2><p>El piloto dura 4-6 semanas. El cliente aporta imágenes, sensores, metadatos, setpoints y registros de calidad/fallo. Se entrega benchmark, demo local, heatmaps, ranking top-10 de alertas y recomendación go/no-go.</p></section>
-  <section><h2>Limitaciones honestas</h2><p>No se presenta como plataforma de producción. No afirma causalidad ni control autónomo. Las acciones/setpoints reales son necesarias para validar predictive quality fuerte.</p></section>
+  <section><h2>Limitaciones honestas</h2><p>Este artefacto está marcado como smoke y no es un benchmark comparable. No se presenta como plataforma de producción, ni afirma causalidad o control autónomo. Las acciones/setpoints y datos reales son necesarios para validar predictive quality.</p></section>
   <script type="application/json" id="demo-data">__DEMO_DATA__</script>
   <script>
     const data = JSON.parse(document.getElementById('demo-data').textContent);
@@ -92,7 +95,7 @@ def main() -> None:
 """
     html = html.replace("__DEMO_DATA__", json.dumps(data).replace("</", "<\\/"))
     (out / "index.html").write_text(html, encoding="utf-8")
-    (out / "README.md").write_text("# Industrial World Model Demo\n\nOpen `index.html` locally. The page embeds the generated data so it works by double click, and `demo_data.json` is kept next to it for reproducibility/audit.\n", encoding="utf-8")
+    (out / "README.md").write_text("# Industrial World Model Demo\n\nStatus: **research smoke**, not comparable benchmark evidence. Open `index.html` locally. The page embeds the generated data so it works by double click, and `demo_data.json` is kept next to it for reproducibility/audit.\n", encoding="utf-8")
     print(f"Demo written to {out / 'index.html'}")
 
 

@@ -15,6 +15,15 @@
 \author{\IEEEauthorblockN{EVOCON Solutions Research Group}}
 
 \begin{document}
+
+\begin{center}
+\fbox{\parbox{0.94\textwidth}{\textbf{Post-audit evidence status (2026-07-13).}
+All visual thresholded values and held-out-hardness tables below are historical
+pre-fix artefacts. Test labels were used to select visual thresholds, and equal
+raw hardness values could cross splits. They are invalid for current claims
+until rerun. DINO-family results require the recorded actual backbone; fallback
+is never a DINO result.}}
+\end{center}
 \maketitle
 
 \begin{abstract}
@@ -134,11 +143,11 @@ Visual anomaly detection reports image-level AUROC, AUPRC, F1, balanced accuracy
 
 \section{Results}
 \subsection{Visual Foundation Results}
-Table~\ref{tab:visual} shows the current quick-run result. DINOv2 was actually loaded from local \texttt{torch.hub} cache; this is not a random fallback. The result is deliberately scoped: one category, quick configuration, not a multi-category production validation.
+Table~\ref{tab:visual} is retained only as a pre-fix record. Although its artefact reports a local DINOv2 cache, its thresholded metrics selected thresholds on test labels. It is not current evidence and must be rerun with a validation-only frozen threshold and actual-backbone provenance.
 
 \begin{table}[t]
 \centering
-\caption{Visual foundation quick runs on MVTec AD bottle.}
+\caption{Invalidated pre-fix visual quick runs; not current benchmark evidence.}
 \label{tab:visual}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -161,7 +170,7 @@ The previous sensor phase remains central for product positioning. In operationa
 
 \begin{table}[t]
 \centering
-\caption{Consolidated CNC sensor evidence from the previous phase.}
+\caption{Historical CNC sensor evidence; hardness rows are invalidated pending a raw-value-disjoint rerun.}
 \label{tab:sensor}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
